@@ -1,0 +1,70 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  padding: 20px 4%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  transition: var(--transition);
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 10%, rgba(0, 0, 0, 0));
+}
+
+.scrolled {
+  background-color: var(--surface);
+}
+
+.left, .right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo {
+  color: var(--primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 2px;
+}
+
+.links {
+  display: flex;
+  list-style: none;
+  gap: 20px;
+  font-size: 0.85rem;
+}
+
+.links li {
+  cursor: pointer;
+  transition: var(--transition);
+  color: var(--text-secondary);
+}
+
+.links li:hover {
+  color: var(--text-primary);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.profile {
+  background-color: #333;
+  border-radius: 4px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .links {
+    display: none;
+  }
+}
