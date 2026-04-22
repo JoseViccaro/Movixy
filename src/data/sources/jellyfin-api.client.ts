@@ -86,9 +86,9 @@ export class JellyfinApiClient {
 
   /** Obtener URL de streaming de un item */
   getStreamUrl(itemId: string): string {
-    // Forzamos transcodificación de audio a AAC y seleccionamos la pista 1 (Español)
-    // El video se copia (remux) para evitar carga de CPU innecesaria
-    return `${this.baseUrl}/Videos/${itemId}/stream.mp4?api_key=${jellyfinConfig.apiKey}&Static=false&AudioCodec=aac&AudioStreamIndex=1&allowVideoStreamCopy=true&allowAudioStreamCopy=false`;
+    // El archivo ha sido pre-convertido a H264 + AAC para máxima compatibilidad
+    // Usamos Static=true para que la reproducción sea instantánea y sin carga de CPU
+    return `${this.baseUrl}/Videos/${itemId}/stream.mp4?static=true&api_key=${jellyfinConfig.apiKey}`;
   }
 }
 

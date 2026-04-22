@@ -59,7 +59,9 @@ export class JellyfinMediaRepository implements IMediaRepository {
       title: item.Name,
       overview: item.Overview || '',
       posterPath: this.client.getImageUrl(item.Id, 'Primary', 400),
-      backdropPath: this.client.getImageUrl(item.Id, 'Backdrop', 1280),
+      backdropPath: item.BackdropImageTags && item.BackdropImageTags.length > 0
+        ? this.client.getImageUrl(item.Id, 'Backdrop', 1280)
+        : this.client.getImageUrl(item.Id, 'Primary', 1280),
       releaseDate: item.ProductionYear?.toString() || '',
       voteAverage: item.CommunityRating || 0,
       mediaType: item.Type === 'Movie' ? 'movie' : 'tv',

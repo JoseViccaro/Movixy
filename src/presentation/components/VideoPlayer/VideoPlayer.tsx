@@ -21,6 +21,7 @@ export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => 
         <video 
           controls 
           autoPlay 
+          muted={false}
           className={styles.video}
           src={streamUrl}
         >
