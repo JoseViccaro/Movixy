@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Login } from './presentation/components/Login/Login';
 import { Home } from './presentation/pages/Home/Home';
+import { JellyfinApiClient } from './data/sources/jellyfin-api.client';
 import './index.css';
 
 type AppState = 'login' | 'home';
@@ -10,22 +11,30 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (serverUrl: string, username: string, _password: string) => {
+  useEffect(() => {
+    const token = localStorage.getItem('movixy_token');
+    const userId = localStorage.getItem('movixy_user_id');
+    if (token && userId) {
+      setAppState('home');
+    }
+  }, []);
+
+  const handleLogin = async (_serverUrl: string, username: string, password: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // For now, store the server URL and go to home
-      // When Jellyfin is running, this will authenticate via API
-      localStorage.setItem('movixy_server', serverUrl);
-      localStorage.setItem('movixy_user', username);
+      const client = new JellyfinApiClient();
+      const response = await client.authenticate(username, password);
       
-      // Simulating auth delay for UX feedback
-      await new Promise(resolve => setTimeout(resolve, 800));
+      localStorage.setItem('movixy_token', response.AccessToken);
+      localStorage.setItem('movixy_user_id', response.User.Id);
+      localStorage.setItem('movixy_username', response.User.Name);
       
       setAppState('home');
-    } catch {
-      setError('Could not connect to server. Please check the URL and try again.');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Credenciales incorrectas o servidor no disponible.');
     } finally {
       setIsLoading(false);
     }

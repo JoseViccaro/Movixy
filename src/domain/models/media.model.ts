@@ -6,7 +6,7 @@ export interface Media {
   backdropPath: string;
   releaseDate: string;
   voteAverage: number;
-  mediaType: 'movie' | 'tv';
+  mediaType: 'movie' | 'tv' | 'episode';
 }
 
 export interface Movie extends Media {

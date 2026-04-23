@@ -5,9 +5,10 @@ import type { Media } from '@/domain/models/media.model';
 interface HeroProps {
   movie: Media | null;
   onPlay: () => void;
+  onMoreInfo: () => void;
 }
 
-export const Hero = ({ movie, onPlay }: HeroProps) => {
+export const Hero = ({ movie, onPlay, onMoreInfo }: HeroProps) => {
   if (!movie) return <div className={styles.heroSkeleton}></div>;
 
   return (
@@ -30,7 +31,7 @@ export const Hero = ({ movie, onPlay }: HeroProps) => {
             <Play fill="black" size={20} />
             <span>Play</span>
           </button>
-          <button className={styles.infoButton}>
+          <button className={styles.infoButton} onClick={onMoreInfo}>
             <Info size={20} />
             <span>More Info</span>
           </button>

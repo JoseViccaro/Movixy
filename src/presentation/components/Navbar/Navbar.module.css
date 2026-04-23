@@ -53,14 +53,84 @@
   color: var(--text-primary);
 }
 
-.profile {
-  background-color: #333;
-  border-radius: 4px;
-  padding: 4px;
+.links li.active {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.searchContainer {
   display: flex;
   align-items: center;
-  justify-content: center;
+  border: 1px solid transparent;
+  padding: 5px;
+  transition: all 0.3s ease;
+}
+
+.searchContainer.active {
+  background-color: rgba(0, 0, 0, 0.75);
+  border-color: white;
+}
+
+.searchInput {
+  background: transparent;
+  border: none;
+  color: white;
+  margin-left: 10px;
+  outline: none;
+  width: 200px;
+  font-size: 0.9rem;
+}
+
+.profileContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
   cursor: pointer;
+}
+
+.profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.username {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  border: 1px solid #333;
+  padding: 15px;
+  min-width: 180px;
+  display: none;
+  border-radius: 4px;
+  margin-top: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+
+.profileContainer:hover .dropdown {
+  display: block;
+}
+
+.logoutButton {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 0.85rem;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  padding: 5px 0;
+}
+
+.logoutButton:hover {
+  text-decoration: underline;
 }
 
 @media (max-width: 768px) {

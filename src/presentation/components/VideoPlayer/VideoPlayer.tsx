@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import Hls from 'hls.js';
 import styles from './VideoPlayer.module.css';
 
 interface VideoPlayerProps {
@@ -8,6 +10,60 @@ interface VideoPlayerProps {
 }
 
 export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  console.log('--- DEPURACIÓN DE VIDEO ---');
+  console.log('URL de Streaming:', streamUrl);
+  console.log('---------------------------');
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    let hls: Hls;
+
+    // Si el navegador soporta HLS de forma nativa (como Safari)
+    if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+    } 
+    // Si no, usamos hls.js (Chrome, Firefox, Edge, etc.)
+    else if (Hls.isSupported()) {
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+      });
+      
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        console.error('Error de HLS:', data);
+        if (data.fatal) {
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.error('Error de red fatal, intentando recuperar...');
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.error('Error de media fatal, intentando recuperar...');
+              hls.recoverMediaError();
+              break;
+            default:
+              console.error('Error fatal irrecuperable');
+              hls.destroy();
+              break;
+          }
+        }
+      });
+
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+    }
+
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+    };
+  }, [streamUrl]);
+
   return (
     <div className={styles.overlay}>
       <div className={styles.container}>
@@ -19,13 +75,12 @@ export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => 
         </div>
         
         <video 
+          ref={videoRef}
           controls 
           autoPlay 
-          muted={false}
           className={styles.video}
-          src={streamUrl}
         >
-          Your browser does not support the video tag.
+          Tu navegador no soporta la reproducción de video.
         </video>
       </div>
     </div>

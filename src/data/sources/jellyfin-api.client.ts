@@ -21,6 +21,13 @@ export class JellyfinApiClient {
       },
     });
 
+    if (response.status === 401) {
+      localStorage.removeItem('movixy_token');
+      localStorage.removeItem('movixy_user_id');
+      window.location.reload(); // Force redirect via App.tsx logic
+      throw new Error('Unauthorized');
+    }
+
     if (!response.ok) {
       throw new Error(`Jellyfin API error: ${response.status} ${response.statusText}`);
     }
@@ -47,18 +54,36 @@ export class JellyfinApiClient {
     return this.request<JellyfinLibrariesResponse>(`/Users/${userId}/Views`);
   }
 
-  /** Obtener items de una biblioteca */
-  async getItems(userId: string, parentId?: string, limit = 20) {
+  /** Obtener items con filtros avanzados */
+  async getItems(userId: string, options: { 
+    parentId?: string, 
+    limit?: number, 
+    genres?: string[],
+    includeItemTypes?: string[],
+    sortBy?: string,
+    sortOrder?: 'Ascending' | 'Descending'
+  } = {}) {
+    const { 
+      parentId, 
+      limit = 20, 
+      genres, 
+      includeItemTypes = ['Movie', 'Series'], 
+      sortBy = 'DateCreated,SortName',
+      sortOrder = 'Descending'
+    } = options;
+
     const params = new URLSearchParams({
-      SortBy: 'DateCreated,SortName',
-      SortOrder: 'Descending',
-      IncludeItemTypes: 'Movie,Series',
+      SortBy: sortBy,
+      SortOrder: sortOrder,
+      IncludeItemTypes: includeItemTypes.join(','),
       Recursive: 'true',
       Fields: 'Overview,Genres,PrimaryImageAspectRatio',
       ImageTypeLimit: '1',
       Limit: limit.toString(),
     });
+
     if (parentId) params.set('ParentId', parentId);
+    if (genres && genres.length > 0) params.set('Genres', genres.join('|'));
 
     return this.request<JellyfinItemsResponse>(`/Users/${userId}/Items?${params}`);
   }
@@ -79,6 +104,37 @@ export class JellyfinApiClient {
     return this.request<JellyfinItemsResponse>(`/Users/${userId}/Items?${params}`);
   }
 
+  /** Obtener items para "Continuar viendo" */
+  async getResumableItems(userId: string) {
+    const params = new URLSearchParams({
+      Recursive: 'true',
+      Fields: 'Overview,Genres,PrimaryImageAspectRatio',
+      ImageTypeLimit: '1',
+      Limit: '12',
+    });
+    return this.request<JellyfinItemsResponse>(`/Users/${userId}/Items/Resume?${params}`);
+  }
+
+  /** Forzar escaneo de la biblioteca */
+  async refreshLibrary() {
+    return fetch(`${this.baseUrl}/Library/Refresh`, {
+      method: 'POST',
+      headers: jellyfinConfig.headers(),
+    });
+  }
+
+  /** Obtener episodios de una serie */
+  async getEpisodes(userId: string, seriesId: string) {
+    const params = new URLSearchParams({
+      ParentId: seriesId,
+      IncludeItemTypes: 'Episode',
+      Recursive: 'true',
+      Fields: 'Overview,PrimaryImageAspectRatio',
+      ImageTypeLimit: '1',
+    });
+    return this.request<JellyfinItemsResponse>(`/Users/${userId}/Items?${params}`);
+  }
+
   /** Obtener URL de la imagen de un item */
   getImageUrl(itemId: string, imageType: 'Primary' | 'Backdrop' = 'Primary', width = 400): string {
     return `${this.baseUrl}/Items/${itemId}/Images/${imageType}?maxWidth=${width}&quality=90`;
@@ -86,9 +142,18 @@ export class JellyfinApiClient {
 
   /** Obtener URL de streaming de un item */
   getStreamUrl(itemId: string): string {
-    // El archivo ha sido pre-convertido a H264 + AAC para máxima compatibilidad
-    // Usamos Static=true para que la reproducción sea instantánea y sin carga de CPU
-    return `${this.baseUrl}/Videos/${itemId}/stream.mp4?static=true&api_key=${jellyfinConfig.apiKey}`;
+    const token = localStorage.getItem('movixy_token') || jellyfinConfig.apiKey;
+    
+    const userId = localStorage.getItem('movixy_user_id') || '';
+    
+    // URL ultra-simplificada
+    const params = new URLSearchParams({
+      'api_key': token,
+      'VideoCodec': 'h264',
+      'AudioCodec': 'aac',
+    });
+
+    return `${this.baseUrl}/Videos/${itemId}/master.m3u8?${params.toString()}`;
   }
 }
 

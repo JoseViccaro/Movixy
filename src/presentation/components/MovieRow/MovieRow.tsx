@@ -6,10 +6,10 @@ import type { Media } from '@/domain/models/media.model';
 interface MovieRowProps {
   title: string;
   movies: Media[];
-  onPlay: (media: Media) => void;
+  onSelect: (media: Media) => void;
 }
 
-export const MovieRow = ({ title, movies, onPlay }: MovieRowProps) => {
+export const MovieRow = ({ title, movies, onSelect }: MovieRowProps) => {
   const rowRef = useRef<HTMLDivElement>(null);
 
   const handleScroll = (direction: 'left' | 'right') => {
@@ -33,7 +33,7 @@ export const MovieRow = ({ title, movies, onPlay }: MovieRowProps) => {
 
         <div className={styles.slider} ref={rowRef}>
           {movies.map((movie) => (
-            <div key={movie.id} className={styles.card} onClick={() => onPlay(movie)}>
+            <div key={movie.id} className={styles.card} onClick={() => onSelect(movie)}>
               <img 
                 src={movie.posterPath} 
                 alt={movie.title} 

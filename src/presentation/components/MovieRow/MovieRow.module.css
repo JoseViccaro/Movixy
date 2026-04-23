@@ -37,14 +37,16 @@
   height: 300px;
   position: relative;
   cursor: pointer;
-  transition: transform 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
   border-radius: 4px;
   overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .card:hover {
-  transform: scale(1.05);
-  z-index: 10;
+  transform: scale(1.15);
+  z-index: 50;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
 }
 
 .poster {
