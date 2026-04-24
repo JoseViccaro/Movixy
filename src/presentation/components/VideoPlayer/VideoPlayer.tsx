@@ -25,12 +25,18 @@ export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => 
     // Si el navegador soporta HLS de forma nativa (como Safari)
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = streamUrl;
+      video.addEventListener('loadedmetadata', () => {
+        video.play().catch((err) => console.log('Autoplay native preventer:', err));
+      });
     } 
     // Si no, usamos hls.js (Chrome, Firefox, Edge, etc.)
     else if (Hls.isSupported()) {
       hls = new Hls({
         enableWorker: true,
-        lowLatencyMode: true,
+        maxBufferLength: 30, // Segundos de buffer a mantener
+        maxMaxBufferLength: 600, // Máximo tamaño de buffer posible
+        maxBufferSize: 60 * 1000 * 1000, // 60MB máximo
+        lowLatencyMode: false, // Mejor para streams bajo demanda
       });
       
       hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -55,6 +61,13 @@ export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => 
 
       hls.loadSource(streamUrl);
       hls.attachMedia(video);
+
+      // Explicitly play after manifest is parsed to ensure autoplay works
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch((err) => {
+          console.log('El navegador bloqueó el autoplay:', err);
+        });
+      });
     }
 
     return () => {

@@ -144,13 +144,19 @@ export class JellyfinApiClient {
   getStreamUrl(itemId: string): string {
     const token = localStorage.getItem('movixy_token') || jellyfinConfig.apiKey;
     
-    const userId = localStorage.getItem('movixy_user_id') || '';
-    
-    // URL ultra-simplificada
+    // URL con parámetros de transcodificación robustos para evitar stuttering y errores 500
     const params = new URLSearchParams({
       'api_key': token,
+      'MediaSourceId': itemId, // Requerido por Jellyfin para transcoding
       'VideoCodec': 'h264',
-      'AudioCodec': 'aac',
+      'AudioCodec': 'aac,mp3', // Fallback for audio
+      'MaxStreamingBitrate': '14000000', // Limitar a 14 Mbps para 1080p estable
+      'TranscodingMaxAudioChannels': '2', // Forzar estéreo para compatibilidad web
+      'MaxWidth': '1920',
+      'MaxHeight': '1080',
+      'RequireAvc': 'true',
+      'RequireNonAnamorphic': 'false',
+      'PlaySessionId': `movixy-${Date.now()}`
     });
 
     return `${this.baseUrl}/Videos/${itemId}/master.m3u8?${params.toString()}`;

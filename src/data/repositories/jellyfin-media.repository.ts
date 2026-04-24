@@ -61,7 +61,6 @@ export class JellyfinMediaRepository implements IMediaRepository {
     const response = await this.client.getItems(this.userId, { 
       parentId: seriesId, 
       includeItemTypes: ['Episode'],
-      recursive: true,
       limit: 1 
     });
     return response.Items[0]?.Id || null;
