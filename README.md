@@ -1,73 +1,134 @@
-# React + TypeScript + Vite
+# Movixy - Your Private Netflix
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p align="center">
+  <img src="public/favicon.svg" alt="Movixy Logo" width="64" height="64" />
+  <br>
+  <a href="https://movixy.app">movixy.app</a>
+</p>
 
-Currently, two official plugins are available:
+Movixy is a modern, Netflix-style streaming interface for your personal media library powered by [Jellyfin](https://jellyfin.org/). Browse your movies, series, and continue watching your content with a beautiful, responsive UI.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?style=flat&logo=typescript)
+![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=flat&logo=vite)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## React Compiler
+## Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Library Browsing** - Netflix-style horizontal scroll rows for Movies, Series, and Popular content
+- **Hero Section** - Featured content with immersive backdrop images
+- **Search** - Real-time search across your entire media library
+- **Media Details** - Modal view with synopsis, ratings, and episode list for series
+- **Video Player** - HLS streaming with transcoding support and auto-recovery
+- **Continue Watching** - Resume playback from where you left off
+- **PWA Support** - Install as a desktop or mobile app, works offline
+- **Dark Theme** - Cinema-like dark experience
 
-## Expanding the ESLint configuration
+## Requirements
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [Jellyfin Server](https://jellyfin.org/downloads/) (v10.8+)
+- A Jellyfin account with access to your media library
+- Node.js 18+ and npm
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Quick Start
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### 1. Clone and Install
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/yourusername/movixy.git
+cd movixy
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### 2. Configure Environment
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create a `.env` file in the root directory:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```env
+VITE_JELLYFIN_URL=http://localhost:8096
+VITE_JELLYFIN_API_KEY=your_api_key
+VITE_JELLYFIN_USER_ID=your_user_id
 ```
+
+#### Getting Your Credentials
+
+1. **Jellyfin URL**: The address where your Jellyfin server is running (e.g., `http://192.168.1.100:8096`)
+
+2. **API Key**: 
+   - Log into your Jellyfin web interface
+   - Go to Dashboard → Advanced → API Keys
+   - Create a new API key for Movixy
+
+3. **User ID**:
+   - Go to Dashboard → Users
+   - Click on your user and copy the User ID from the URL or use the API `/users` endpoint
+
+### 3. Run
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:5173` in your browser.
+
+### 4. Docker (Optional)
+
+If you don't have Jellyfin running, use the included docker-compose:
+
+```bash
+docker-compose up -d
+```
+
+This starts Jellyfin at `http://localhost:8096` with default credentials (admin/admin).
+
+## Project Structure
+
+```
+src/
+├── core/config/           # App configuration
+│   └── jellyfin.config.ts
+├── domain/               # Business logic layer
+│   ├── models/           # TypeScript interfaces
+│   └── repositories/     # Repository interfaces
+├── data/                 # Data layer
+│   ├── sources/          # API clients
+│   └── repositories/    # Repository implementations
+└── presentation/         # UI layer
+    ├── pages/           # Page components
+    └── components/     # Reusable components
+```
+
+## Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run lint` | Run ESLint |
+| `npm run preview` | Preview production build |
+
+## Tech Stack
+
+- **React 19** - UI Framework
+- **TypeScript 6** - Type safety
+- **Vite 8** - Build tool
+- **CSS Modules** - Scoped styling
+- **HLS.js** - Video streaming
+- **Jellyfin API** - Media server
+- **Vite PWA** - Progressive Web App
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+Built with ❤️ for private media enthusiasts.

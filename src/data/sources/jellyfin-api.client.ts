@@ -7,32 +7,46 @@ import { jellyfinConfig } from '@/core/config/jellyfin.config';
  */
 export class JellyfinApiClient {
   private baseUrl: string;
+  private maxRetries = 3;
+  private retryDelay = 1000;
 
   constructor() {
     this.baseUrl = jellyfinConfig.baseUrl;
   }
 
-  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      headers: {
-        ...jellyfinConfig.headers(),
-        ...options?.headers,
-      },
-    });
+  private async request<T>(endpoint: string, options?: RequestInit, retries = 0): Promise<T> {
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        headers: {
+          ...jellyfinConfig.headers(),
+          ...options?.headers,
+        },
+      });
 
-    if (response.status === 401) {
-      localStorage.removeItem('movixy_token');
-      localStorage.removeItem('movixy_user_id');
-      window.location.reload(); // Force redirect via App.tsx logic
-      throw new Error('Unauthorized');
+      if (response.status === 401) {
+        localStorage.removeItem('movixy_token');
+        localStorage.removeItem('movixy_user_id');
+        window.location.reload();
+        throw new Error('Unauthorized');
+      }
+
+      if (!response.ok) {
+        if (retries < this.maxRetries && response.status >= 500) {
+          await new Promise(r => setTimeout(r, this.retryDelay * (retries + 1)));
+          return this.request<T>(endpoint, options, retries + 1);
+        }
+        throw new Error(`Jellyfin API error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      if (retries < this.maxRetries) {
+        await new Promise(r => setTimeout(r, this.retryDelay * (retries + 1)));
+        return this.request<T>(endpoint, options, retries + 1);
+      }
+      throw error;
     }
-
-    if (!response.ok) {
-      throw new Error(`Jellyfin API error: ${response.status} ${response.statusText}`);
-    }
-
-    return response.json();
   }
 
   /**
@@ -135,6 +149,32 @@ export class JellyfinApiClient {
     return this.request<JellyfinItemsResponse>(`/Users/${userId}/Items?${params}`);
   }
 
+  /** Obtener items favoritos del usuario */
+  async getFavorites(userId: string) {
+    const params = new URLSearchParams({
+      Filters: 'IsFavorite',
+      Recursive: 'true',
+      Fields: 'Overview,PrimaryImageAspectRatio',
+      ImageTypeLimit: '1',
+      Limit: '50',
+    });
+    return this.request<JellyfinItemsResponse>(`/Users/${userId}/Items?${params}`);
+  }
+
+  /** Obtener datos de usuario para un item (saber si es favorito) */
+  async getItemUserData(userId: string, itemId: string) {
+    return this.request<JellyfinUserItemData>(`/Users/${userId}/Items/${itemId}/UserData`);
+  }
+
+  /** Actualizar datos de usuario para un item (marcar favorito, progreso, etc) */
+  async updateItemUserData(userId: string, itemId: string, data: Partial<JellyfinUserItemData>) {
+    return this.request<void>(`/Users/${userId}/Items/${itemId}/UserData`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  }
+
   /** Obtener URL de la imagen de un item */
   getImageUrl(itemId: string, imageType: 'Primary' | 'Backdrop' = 'Primary', width = 400): string {
     return `${this.baseUrl}/Items/${itemId}/Images/${imageType}?maxWidth=${width}&quality=90`;
@@ -199,4 +239,13 @@ export interface JellyfinItem {
     Primary?: string;
   };
   BackdropImageTags?: string[];
+  SeriesName?: string;
+}
+
+export interface JellyfinUserItemData {
+  Rating: number;
+  IsFavorite: boolean;
+  Played: boolean;
+  PlaybackPositionTicks: number;
+  PlayCount: number;
 }

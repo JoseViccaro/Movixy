@@ -20,23 +20,38 @@ export const MovieRow = ({ title, movies, onSelect }: MovieRowProps) => {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent, movie: Media) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      onSelect(movie);
+    }
+  };
+
   return (
-    <div className={styles.row}>
+    <div className={styles.row} role="region" aria-label={title}>
       <h2 className={styles.title}>{title}</h2>
       <div className={styles.container}>
         <button 
           className={`${styles.sliderButton} ${styles.left}`} 
           onClick={() => handleScroll('left')}
+          aria-label={`Desplazar ${title} a la izquierda`}
         >
-          <ChevronLeft size={40} />
+          <ChevronLeft size={40} aria-hidden="true" />
         </button>
 
-        <div className={styles.slider} ref={rowRef}>
+        <div className={styles.slider} ref={rowRef} role="list" aria-label={`Películas en ${title}`}>
           {movies.map((movie) => (
-            <div key={movie.id} className={styles.card} onClick={() => onSelect(movie)}>
+            <div 
+              key={movie.id} 
+              className={styles.card} 
+              onClick={() => onSelect(movie)}
+              onKeyDown={(e) => handleKeyDown(e, movie)}
+              role="listitem"
+              tabIndex={0}
+              aria-label={`${movie.title}, calificación ${movie.voteAverage} estrellas`}
+            >
               <img 
                 src={movie.posterPath} 
-                alt={movie.title} 
+                alt={`Póster de ${movie.title}`}
                 className={styles.poster}
                 loading="lazy"
               />
@@ -54,8 +69,9 @@ export const MovieRow = ({ title, movies, onSelect }: MovieRowProps) => {
         <button 
           className={`${styles.sliderButton} ${styles.right}`} 
           onClick={() => handleScroll('right')}
+          aria-label={`Desplazar ${title} a la derecha`}
         >
-          <ChevronRight size={40} />
+          <ChevronRight size={40} aria-hidden="true" />
         </button>
       </div>
     </div>

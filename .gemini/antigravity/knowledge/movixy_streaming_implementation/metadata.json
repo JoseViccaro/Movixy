@@ -1,0 +1,8 @@
+{
+  "title": "Movixy Streaming Implementation",
+  "summary": "Detalles técnicos sobre la integración de Jellyfin, uso de HLS con hls.js, transcodificación de audio y estado actual de la depuración del reproductor.",
+  "category": "Infrastructure",
+  "tags": ["jellyfin", "hls", "streaming", "video-player", "transcoding"],
+  "last_updated": "2026-04-23T17:09:00Z",
+  "references": ["b4225381-7d10-4a7f-9c87-1d43cdae76e7"]
+}

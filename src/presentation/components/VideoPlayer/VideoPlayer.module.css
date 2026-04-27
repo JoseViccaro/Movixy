@@ -29,11 +29,75 @@
   background-color: #181818;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .title {
   color: white;
   margin: 0;
   font-size: 1.2rem;
   font-weight: 500;
+}
+
+.subtitlesMenuContainer {
+  position: relative;
+}
+
+.subtitlesButton {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.subtitlesButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: white;
+}
+
+.subtitlesMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 5px;
+  background-color: #232323;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 150px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+}
+
+.subtitleOption {
+  display: block;
+  width: 100%;
+  padding: 10px 15px;
+  background: none;
+  border: none;
+  color: #a3a3a3;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.subtitleOption:hover {
+  background-color: #333;
+  color: white;
+}
+
+.subtitleOption.active {
+  background-color: #464646;
+  color: white;
 }
 
 .closeButton {
@@ -50,6 +114,23 @@
 }
 
 .closeButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.controlButton {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controlButton:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 

@@ -1,23 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Login } from './presentation/components/Login/Login';
 import { Home } from './presentation/pages/Home/Home';
+import { ErrorBoundary } from './presentation/components/ErrorBoundary/ErrorBoundary';
+import { OfflineIndicator } from './presentation/components/OfflineIndicator/OfflineIndicator';
+import { ToastProvider } from './presentation/components/Toast/Toast';
 import { JellyfinApiClient } from './data/sources/jellyfin-api.client';
 import './index.css';
 
 type AppState = 'login' | 'home';
 
 function App() {
-  const [appState, setAppState] = useState<AppState>('login');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
+  const [appState, setAppState] = useState<AppState>(() => {
     const token = localStorage.getItem('movixy_token');
     const userId = localStorage.getItem('movixy_user_id');
-    if (token && userId) {
-      setAppState('home');
-    }
-  }, []);
+    return token && userId ? 'home' : 'login';
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async (_serverUrl: string, username: string, password: string) => {
     setIsLoading(true);
@@ -41,12 +40,19 @@ function App() {
   };
 
   return (
-    <div className="app">
-      {appState === 'login' && (
-        <Login onLogin={handleLogin} isLoading={isLoading} error={error} />
-      )}
-      {appState === 'home' && <Home />}
-    </div>
+    <ToastProvider>
+      <div className="app">
+        {appState === 'login' && (
+          <Login onLogin={handleLogin} isLoading={isLoading} error={error} />
+        )}
+        {appState === 'home' && (
+          <ErrorBoundary>
+            <Home />
+          </ErrorBoundary>
+        )}
+        <OfflineIndicator />
+      </div>
+    </ToastProvider>
   );
 }
 

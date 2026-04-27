@@ -1,24 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Navbar } from '@/presentation/components/Navbar/Navbar';
 import { Hero } from '@/presentation/components/Hero/Hero';
 import { MovieRow } from '@/presentation/components/MovieRow/MovieRow';
-import { VideoPlayer } from '@/presentation/components/VideoPlayer/VideoPlayer';
-import { MediaModal } from '@/presentation/components/MediaModal/MediaModal';
 import { Skeleton } from '@/presentation/components/Skeleton/Skeleton';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
 import type { Media } from '@/domain/models/media.model';
+
+const VideoPlayer = lazy(() => import('@/presentation/components/VideoPlayer/VideoPlayer').then(m => ({ default: m.VideoPlayer })));
+const MediaModal = lazy(() => import('@/presentation/components/MediaModal/MediaModal').then(m => ({ default: m.MediaModal })));
 
 export const Home = () => {
   const [popular, setPopular] = useState<Media[]>([]);
   const [moviesList, setMoviesList] = useState<Media[]>([]);
   const [seriesList, setSeriesList] = useState<Media[]>([]);
   const [continueWatching, setContinueWatching] = useState<Media[]>([]);
+  const [favorites, setFavorites] = useState<Media[]>([]);
   const [searchResults, setSearchResults] = useState<Media[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [playingMedia, setPlayingMedia] = useState<Media | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+  const [currentSection, setCurrentSection] = useState('inicio');
+
+  const handleNavigate = (section: string) => {
+    setCurrentSection(section);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,23 +35,25 @@ export const Home = () => {
         const userId = localStorage.getItem('movixy_user_id');
         
         if (!userId) {
-          window.location.reload(); // Force check in App.tsx
+          window.location.reload();
           return;
         }
 
         const repository = new JellyfinMediaRepository(client, userId);
         
-        const [popularData, moviesData, seriesData, continueData] = await Promise.all([
+        const [popularData, moviesData, seriesData, continueData, favoritesData] = await Promise.all([
           repository.getPopular(),
           repository.getMovies(),
           repository.getSeries(),
-          repository.getContinueWatching()
+          repository.getContinueWatching(),
+          repository.getFavorites()
         ]);
 
         setPopular(popularData);
         setMoviesList(moviesData);
         setSeriesList(seriesData);
         setContinueWatching(continueData);
+        setFavorites(favoritesData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -107,7 +117,7 @@ export const Home = () => {
   if (isLoading && !playingMedia && !selectedMedia) {
     return (
       <div style={{ backgroundColor: '#141414', minHeight: '100vh' }}>
-        <Navbar />
+        <Navbar onNavigate={handleNavigate} currentSection={currentSection} />
         <Skeleton type="hero" />
         <div style={{ padding: '20px 4%', marginTop: '-100px', display: 'flex', gap: '15px', overflow: 'hidden' }}>
           {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} type="card" />)}
@@ -121,10 +131,63 @@ export const Home = () => {
 
   const heroMovie = popular.length > 0 ? popular[0] : null;
 
+  const renderSections = () => {
+    if (searchResults.length > 0) {
+      return <MovieRow title="Resultados de búsqueda" movies={searchResults} onSelect={handleSelect} />;
+    }
+
+    switch (currentSection) {
+      case 'inicio':
+        return (
+          <>
+            {continueWatching.length > 0 && <MovieRow title="Continuar viendo" movies={continueWatching} onSelect={handleSelect} />}
+            <MovieRow title="Tendencias" movies={popular} onSelect={handleSelect} />
+            {moviesList.length > 0 && <MovieRow title="Películas" movies={moviesList} onSelect={handleSelect} />}
+            {seriesList.length > 0 && <MovieRow title="Series" movies={seriesList} onSelect={handleSelect} />}
+          </>
+        );
+      case 'movies':
+        return moviesList.length > 0 ? (
+          <MovieRow title="Todas las Películas" movies={moviesList} onSelect={handleSelect} />
+        ) : (
+          <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
+            <h2>No hay películas</h2>
+          </div>
+        );
+      case 'series':
+        return seriesList.length > 0 ? (
+          <MovieRow title="Todas las Series" movies={seriesList} onSelect={handleSelect} />
+        ) : (
+          <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
+            <h2>No hay series</h2>
+          </div>
+        );
+      case 'novedades':
+        return popular.length > 0 ? (
+          <MovieRow title="Novedades" movies={popular} onSelect={handleSelect} />
+        ) : (
+          <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
+            <h2>No hay novedades</h2>
+          </div>
+        );
+      case 'mylist':
+        return favorites.length > 0 ? (
+          <MovieRow title="Mi Lista" movies={favorites} onSelect={handleSelect} />
+        ) : (
+          <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
+            <h2>Tu lista está vacía</h2>
+            <p>Agrega contenido desde el botón + en los detalles de cada título</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div style={{ paddingBottom: '50px' }}>
-      <Navbar onSearch={handleSearch} />
-      {heroMovie && (
+      <Navbar onSearch={handleSearch} onNavigate={handleNavigate} currentSection={currentSection} />
+      {heroMovie && currentSection === 'inicio' && (
         <Hero 
           movie={heroMovie} 
           onPlay={() => handlePlay(heroMovie)} 
@@ -132,41 +195,32 @@ export const Home = () => {
         />
       )}
       
-      <div style={{ marginTop: heroMovie ? '-100px' : '20px', zIndex: 10, position: 'relative' }}>
-        {popular.length > 0 ? (
-          <>
-            {searchResults.length > 0 && <MovieRow title="Resultados de búsqueda" movies={searchResults} onSelect={handleSelect} />}
-            {continueWatching.length > 0 && <MovieRow title="Continuar viendo" movies={continueWatching} onSelect={handleSelect} />}
-            <MovieRow title="Tendencias" movies={popular} onSelect={handleSelect} />
-            {moviesList.length > 0 && <MovieRow title="Películas" movies={moviesList} onSelect={handleSelect} />}
-            {seriesList.length > 0 && <MovieRow title="Series" movies={seriesList} onSelect={handleSelect} />}
-          </>
-        ) : (
-          <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
-            <h2>Tu biblioteca está vacía</h2>
-            <p>Asegúrate de que Jellyfin haya escaneado tus archivos en la carpeta /media.</p>
-          </div>
-        )}
+      <div style={{ marginTop: heroMovie && currentSection === 'inicio' ? '-100px' : '20px', padding: '0 4%', zIndex: 10, position: 'relative' }}>
+        {renderSections()}
       </div>
 
       {selectedMedia && (
-        <MediaModal 
-          media={selectedMedia} 
-          onClose={() => setSelectedMedia(null)} 
-          onPlay={handlePlay}
-        />
+        <Suspense fallback={<div style={{ backgroundColor: '#141414', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Cargando...</div>}>
+          <MediaModal 
+            media={selectedMedia} 
+            onClose={() => setSelectedMedia(null)} 
+            onPlay={handlePlay}
+          />
+        </Suspense>
       )}
 
       {playingMedia && playingUrl && (
-        <VideoPlayer 
-          key={playingUrl}
-          title={playingMedia.title}
-          streamUrl={playingUrl}
-          onClose={() => {
-            setPlayingMedia(null);
-            setPlayingUrl(null);
-          }}
-        />
+        <Suspense fallback={<div style={{ backgroundColor: '#141414', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Cargando reproductor...</div>}>
+          <VideoPlayer 
+            key={playingUrl}
+            title={playingMedia.title}
+            streamUrl={playingUrl}
+            onClose={() => {
+              setPlayingMedia(null);
+              setPlayingUrl(null);
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );

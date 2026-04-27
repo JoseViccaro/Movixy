@@ -7,6 +7,9 @@ export interface Media {
   releaseDate: string;
   voteAverage: number;
   mediaType: 'movie' | 'tv' | 'episode';
+  seasonNumber?: number;
+  episodeNumber?: number;
+  isFavorite?: boolean;
 }
 
 export interface Movie extends Media {

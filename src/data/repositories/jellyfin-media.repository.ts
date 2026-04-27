@@ -66,13 +66,31 @@ export class JellyfinMediaRepository implements IMediaRepository {
     return response.Items[0]?.Id || null;
   }
 
+  async getFavorites(): Promise<Media[]> {
+    const response = await this.client.getFavorites(this.userId);
+    return response.Items.map((item) => this.mapToMedia(item));
+  }
+
+  async toggleFavorite(itemId: string, isFavorite: boolean): Promise<void> {
+    await this.client.updateItemUserData(this.userId, itemId, { IsFavorite: isFavorite });
+  }
+
+  async isFavorite(itemId: string): Promise<boolean> {
+    try {
+      const data = await this.client.getItemUserData(this.userId, itemId);
+      return data.IsFavorite;
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * Mapper: JellyfinItem (DTO) → Media (Domain Model)
    * Toda la lógica de transformación vive aquí.
    */
   private mapToMedia(item: JellyfinItem): Media {
-    const title = item.Type === 'Episode' && (item as any).SeriesName 
-      ? `${(item as any).SeriesName}: ${item.Name}`
+    const title = item.Type === 'Episode' && item.SeriesName 
+      ? `${item.SeriesName}: ${item.Name}`
       : item.Name;
 
     return {

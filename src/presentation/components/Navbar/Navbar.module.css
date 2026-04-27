@@ -8,7 +8,7 @@
   align-items: center;
   z-index: 100;
   transition: var(--transition);
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 10%, rgba(0, 0, 0, 0));
+  background-color: var(--surface);
 }
 
 .scrolled {
@@ -86,6 +86,15 @@
   display: flex;
   align-items: center;
   cursor: pointer;
+  z-index: 1000;
+}
+
+.profileContainer svg {
+  transition: transform 0.2s ease;
+}
+
+.profileContainer.open svg {
+  transform: rotate(180deg);
 }
 
 .profile {
@@ -104,18 +113,14 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: rgba(0, 0, 0, 0.9);
+  background-color: rgba(0, 0, 0, 0.95);
   border: 1px solid #333;
   padding: 15px;
-  min-width: 180px;
-  display: none;
+  min-width: 200px;
   border-radius: 4px;
   margin-top: 10px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-}
-
-.profileContainer:hover .dropdown {
-  display: block;
+  z-index: 1000;
 }
 
 .logoutButton {
