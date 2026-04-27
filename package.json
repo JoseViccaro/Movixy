@@ -14,10 +14,8 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "vitest run"
-    ]
+    "*.{ts,tsx}": "eslint --fix",
+    "*.test.{ts,tsx}": "vitest run"
   },
   "dependencies": {
     "hls.js": "^1.6.16",
