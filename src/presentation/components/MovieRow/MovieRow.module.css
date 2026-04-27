@@ -1,16 +1,22 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   MovieRow — Premium Card Carousel with Micro-interactions
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .row {
-  margin-top: 1.5rem;
-  padding: 0 4%;
+  margin-top: 2rem;
   position: relative;
 }
 
 .title {
-  color: var(--text-primary);
+  color: var(--text-primary, #fff);
   font-size: 1.4rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-bottom: 0.5rem;
+  padding: 0 4%;
+  letter-spacing: -0.02em;
 }
 
+/* ── Slider Container ───────────────────────────────────────────────────────── */
 .container {
   position: relative;
   display: flex;
@@ -19,110 +25,203 @@
 
 .slider {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: scroll;
-  overflow-y: hidden;
-  padding: 1rem 0;
+  overflow-y: visible;
+  padding: 1.5rem 4% 4rem;
   scroll-behavior: smooth;
-  scrollbar-width: none; /* Firefox */
+  scrollbar-width: none;
 }
 
 .slider::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
+  display: none;
 }
 
+/* ── Card ────────────────────────────────────────────────────────────────────── */
 .card {
   min-width: 200px;
   max-width: 200px;
   height: 300px;
   position: relative;
   cursor: pointer;
-  transition: transform 0.4s cubic-bezier(0.33, 1, 0.68, 1);
-  border-radius: 4px;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  overflow: visible;
+  flex-shrink: 0;
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+              z-index 0s 0.35s;
 }
 
 .card:hover {
-  transform: scale(1.15);
+  transform: scale(1.4);
   z-index: 50;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6);
+  transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1),
+              z-index 0s;
 }
 
+/* ── Poster ──────────────────────────────────────────────────────────────────── */
 .poster {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 6px 6px 0 0;
+  display: block;
+  transition: border-radius 0.3s ease;
 }
 
-.cardInfo {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 1rem;
-  background: linear-gradient(transparent, rgba(0,0,0,0.9));
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.card:hover .poster {
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
 }
 
-.card:hover .cardInfo {
-  opacity: 1;
-}
-
-.cardTitle {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-bottom: 0.3rem;
-  color: #fff;
-}
-
-.progressBar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  background: #e50914;
-  transition: width 0.3s ease;
-  border-radius: 0 0 4px 4px;
-}
-
+/* ── Progress bar (continue watching) ────────────────────────────────────────── */
 .progressBarContainer {
   position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 3px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 0 0 4px 4px;
+  background: rgba(255, 255, 255, 0.2);
+  z-index: 2;
 }
 
-.meta {
+.progressBar {
+  height: 100%;
+  background: #e50914;
+  border-radius: 0 2px 2px 0;
+  transition: width 0.3s ease;
+}
+
+/* ── Hover Overlay ───────────────────────────────────────────────────────────── */
+.hoverOverlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #181818;
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
+  padding: 12px;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  z-index: 51;
+}
+
+.card:hover .hoverOverlay {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* ── Quick Actions (Play, Add, Info) ─────────────────────────────────────────── */
+.quickActions {
   display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: #ccc;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.playBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  border: 2px solid white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  color: black;
+  padding-left: 2px;
+}
+
+.playBtn:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: scale(1.1);
+}
+
+.actionBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(42, 42, 42, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  color: white;
+}
+
+.actionBtn:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+/* ── Card Meta ───────────────────────────────────────────────────────────────── */
+.cardMeta {
+  cursor: pointer;
+}
+
+.cardTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .rating {
-  color: #46d369; /* Netflix style match % */
-  font-weight: bold;
+  color: #46d369;
+  font-weight: 700;
+  font-size: 0.8rem;
 }
 
+.year {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.78rem;
+}
+
+.badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 1px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ── Slider Navigation Buttons ──────────────────────────────────────────────── */
 .sliderButton {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 40px;
+  width: 52px;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
   color: white;
   z-index: 20;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.3s ease, background 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  cursor: pointer;
 }
 
 .container:hover .sliderButton {
@@ -130,23 +229,40 @@
 }
 
 .sliderButton:hover {
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
 }
 
 .left {
-  left: -4%;
+  left: 0;
+  border-radius: 0 4px 4px 0;
 }
 
 .right {
-  right: -4%;
+  right: 0;
+  border-radius: 4px 0 0 4px;
 }
 
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .sliderButton {
     display: none;
   }
+
   .card {
-    min-width: 140px;
-    height: 210px;
+    min-width: 150px;
+    max-width: 150px;
+    height: 225px;
+  }
+
+  .card:hover {
+    transform: scale(1.05);
+  }
+
+  .hoverOverlay {
+    display: none;
+  }
+
+  .slider {
+    padding-bottom: 1.5rem;
   }
 }

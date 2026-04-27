@@ -1,84 +1,140 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Hero — Cinematic Landing Section
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 .hero {
   position: relative;
-  height: 80vh;
+  height: 85vh;
   width: 100%;
-  color: var(--text-primary);
+  color: #fff;
+  overflow: hidden;
 }
 
+/* ── Background Image ───────────────────────────────────────────────────────── */
 .imageContainer {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
+  inset: 0;
+  z-index: 0;
 }
 
 .image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center 20%;
+  animation: heroZoom 20s ease-in-out infinite alternate;
 }
 
-.overlay {
+@keyframes heroZoom {
+  from { transform: scale(1); }
+  to   { transform: scale(1.08); }
+}
+
+/* ── Vignette: left-to-right dark wash ──────────────────────────────────────── */
+.vignette {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   background: linear-gradient(
     to right,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.5) 35%,
+    rgba(0, 0, 0, 0.15) 60%,
     transparent 100%
-  ),
-  linear-gradient(
-    to bottom,
-    transparent 60%,
-    rgba(0, 0, 0, 0.8) 90%,
-    var(--background) 100%
   );
 }
 
+/* ── Bottom fade to page background ─────────────────────────────────────────── */
+.bottomFade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(
+    to top,
+    var(--background, #141414) 0%,
+    rgba(20, 20, 20, 0.7) 40%,
+    transparent 100%
+  );
+}
+
+/* ── Content ────────────────────────────────────────────────────────────────── */
 .content {
   position: absolute;
   top: 50%;
   left: 4%;
-  transform: translateY(-40%);
-  max-width: 500px;
+  transform: translateY(-50%);
+  max-width: 550px;
+  z-index: 2;
+  animation: fadeSlideUp 0.8s ease-out;
 }
 
-.title {
-  font-size: 3.5rem;
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(-40%) translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+/* ── Rating Badge ───────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
   font-weight: 700;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.45);
+  color: #f5c518;
+  margin-bottom: 16px;
 }
 
+/* ── Title ──────────────────────────────────────────────────────────────────── */
+.title {
+  font-size: 3.8rem;
+  font-weight: 800;
+  line-height: 1.05;
+  margin: 0 0 1rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
+  letter-spacing: -0.03em;
+}
+
+/* ── Overview ───────────────────────────────────────────────────────────────── */
 .overview {
   font-size: 1.1rem;
-  line-height: 1.4;
-  margin-bottom: 1.5rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.45);
-  color: #fff;
+  line-height: 1.5;
+  margin-bottom: 1.8rem;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.6);
+  color: rgba(255, 255, 255, 0.9);
 }
 
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
 .buttons {
   display: flex;
   gap: 1rem;
 }
 
-.playButton, .infoButton {
+.playButton,
+.infoButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.8rem;
-  border-radius: 4px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  transition: var(--transition);
+  gap: 0.6rem;
+  padding: 0.7rem 2rem;
+  border-radius: 6px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.01em;
 }
 
 .playButton {
@@ -87,39 +143,52 @@
 }
 
 .playButton:hover {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.04);
 }
 
 .infoButton {
-  background-color: rgba(109, 109, 110, 0.7);
+  background-color: rgba(109, 109, 110, 0.6);
+  backdrop-filter: blur(4px);
   color: white;
 }
 
 .infoButton:hover {
   background-color: rgba(109, 109, 110, 0.4);
+  transform: scale(1.04);
 }
 
+/* ── Skeleton ───────────────────────────────────────────────────────────────── */
 .heroSkeleton {
-  height: 80vh;
+  height: 85vh;
   width: 100%;
-  background-color: var(--surface);
-  animation: pulse 1.5s infinite;
+  background: linear-gradient(110deg, #1a1a1a 25%, #2a2a2a 37%, #1a1a1a 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
-@keyframes pulse {
-  0% { opacity: 0.6; }
-  50% { opacity: 1; }
-  100% { opacity: 0.6; }
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
 }
 
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
+  .hero {
+    height: 70vh;
+  }
   .title {
-    font-size: 2.5rem;
+    font-size: 2.4rem;
   }
   .overview {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
   .content {
     max-width: 90%;
+  }
+  .playButton,
+  .infoButton {
+    padding: 0.6rem 1.4rem;
+    font-size: 0.9rem;
   }
 }
