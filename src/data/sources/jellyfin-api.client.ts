@@ -75,6 +75,9 @@ export class JellyfinApiClient {
     parentId?: string, 
     limit?: number, 
     genres?: string[],
+    years?: number[],
+    ratings?: string[],
+    languages?: string[],
     includeItemTypes?: string[],
     sortBy?: string,
     sortOrder?: 'Ascending' | 'Descending'
@@ -83,6 +86,9 @@ export class JellyfinApiClient {
       parentId, 
       limit = 20, 
       genres, 
+      years,
+      ratings,
+      languages,
       includeItemTypes = ['Movie', 'Series'], 
       sortBy = 'DateCreated,SortName',
       sortOrder = 'Descending'
@@ -100,6 +106,9 @@ export class JellyfinApiClient {
 
     if (parentId) params.set('ParentId', parentId);
     if (genres && genres.length > 0) params.set('Genres', genres.join('|'));
+    if (years && years.length > 0) params.set('Years', years.join(','));
+    if (ratings && ratings.length > 0) params.set('OfficialRatings', ratings.join(','));
+    if (languages && languages.length > 0) params.set('Languages', languages.join(','));
 
     return this.request<JellyfinItemsResponse>(`/Users/${userId}/Items?${params}`);
   }
@@ -252,11 +261,17 @@ export interface JellyfinItem {
   ProductionYear?: number;
   CommunityRating?: number;
   Type: 'Movie' | 'Series' | 'Episode';
+  RunTimeTicks?: number;
   ImageTags?: {
     Primary?: string;
   };
   BackdropImageTags?: string[];
   SeriesName?: string;
+  UserData?: {
+    PlaybackPositionTicks?: number;
+    Played?: boolean;
+    IsFavorite?: boolean;
+  };
 }
 
 export interface JellyfinUserItemData {

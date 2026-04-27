@@ -1,5 +1,5 @@
 import type { Media } from '@/domain/models/media.model';
-import type { IMediaRepository } from '@/domain/repositories/media.repository';
+import type { IMediaRepository, FilterOptions } from '@/domain/repositories/media.repository';
 import { JellyfinApiClient, type JellyfinItem } from '@/data/sources/jellyfin-api.client';
 
 /**
@@ -57,6 +57,25 @@ export class JellyfinMediaRepository implements IMediaRepository {
     return response.Items.map((item) => this.mapToMedia(item));
   }
 
+  async getFiltered(options: FilterOptions): Promise<Media[]> {
+    const { genres, years, ratings, languages, mediaType } = options;
+    
+    const includeItemTypes = mediaType === 'movie' ? ['Movie'] :
+                            mediaType === 'tv' ? ['Series'] :
+                            ['Movie', 'Series'];
+    
+    const response = await this.client.getItems(this.userId, {
+      genres,
+      years,
+      ratings,
+      languages,
+      includeItemTypes: includeItemTypes as ('Movie' | 'Series')[],
+      limit: 50,
+    });
+    
+    return response.Items.map((item) => this.mapToMedia(item));
+  }
+
   async getFirstEpisodeId(seriesId: string): Promise<string | null> {
     const response = await this.client.getItems(this.userId, { 
       parentId: seriesId, 
@@ -93,6 +112,12 @@ export class JellyfinMediaRepository implements IMediaRepository {
       ? `${item.SeriesName}: ${item.Name}`
       : item.Name;
 
+    const runtimeTicks = item.RunTimeTicks || 0;
+    const playbackPositionTicks = item.UserData?.PlaybackPositionTicks || 0;
+    const watchedPercentage = runtimeTicks > 0 
+      ? Math.round((playbackPositionTicks / runtimeTicks) * 100) 
+      : 0;
+
     return {
       id: item.Id,
       title: title,
@@ -104,6 +129,9 @@ export class JellyfinMediaRepository implements IMediaRepository {
       releaseDate: item.ProductionYear?.toString() || '',
       voteAverage: item.CommunityRating || 0,
       mediaType: item.Type === 'Movie' ? 'movie' : (item.Type === 'Episode' ? 'episode' : 'tv'),
+      playbackPositionTicks,
+      runtimeTicks,
+      watchedPercentage,
     };
   }
 }

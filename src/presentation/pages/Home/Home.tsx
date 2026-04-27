@@ -2,10 +2,12 @@ import { useEffect, useState, lazy, Suspense } from 'react';
 import { Navbar } from '@/presentation/components/Navbar/Navbar';
 import { Hero } from '@/presentation/components/Hero/Hero';
 import { MovieRow } from '@/presentation/components/MovieRow/MovieRow';
+import { FilterBar } from '@/presentation/components/FilterBar/FilterBar';
 import { Skeleton } from '@/presentation/components/Skeleton/Skeleton';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
 import type { Media } from '@/domain/models/media.model';
+import type { FilterState } from '@/presentation/components/FilterBar/FilterBar';
 
 const VideoPlayer = lazy(() => import('@/presentation/components/VideoPlayer/VideoPlayer').then(m => ({ default: m.VideoPlayer })));
 const MediaModal = lazy(() => import('@/presentation/components/MediaModal/MediaModal').then(m => ({ default: m.MediaModal })));
@@ -21,7 +23,11 @@ export const Home = () => {
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [playingMedia, setPlayingMedia] = useState<Media | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+  const [startPosition, setStartPosition] = useState<number | undefined>(undefined);
   const [currentSection, setCurrentSection] = useState('inicio');
+  const [filters, setFilters] = useState<FilterState | null>(null);
+  const [filteredResults, setFilteredResults] = useState<Media[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
 
   const handleNavigate = (section: string) => {
     setCurrentSection(section);
@@ -84,6 +90,12 @@ export const Home = () => {
         }
       }
       
+      // Calcular posición inicial desde playbackPositionTicks (ticks a segundos)
+      const startPos = media.playbackPositionTicks 
+        ? media.playbackPositionTicks / 10_000_000 
+        : undefined;
+      
+      setStartPosition(startPos);
       setPlayingUrl(client.getStreamUrl(playableId));
       setPlayingMedia(media);
     } catch (error) {
@@ -95,6 +107,32 @@ export const Home = () => {
 
   const handleSelect = (media: Media) => {
     setSelectedMedia(media);
+  };
+
+  const handleToggleFavorite = async (media: Media) => {
+    try {
+      const client = new JellyfinApiClient();
+      const userId = localStorage.getItem('movixy_user_id')!;
+      const repository = new JellyfinMediaRepository(client, userId);
+      
+      const newFavoriteStatus = !media.isFavorite;
+      await repository.toggleFavorite(media.id, newFavoriteStatus);
+      
+      // Update local state
+      const updateMediaList = (list: Media[]) =>
+        list.map(m => m.id === media.id ? { ...m, isFavorite: newFavoriteStatus } : m);
+      
+      setPopular(updateMediaList);
+      setMoviesList(updateMediaList);
+      setSeriesList(updateMediaList);
+      setFavorites(newFavoriteStatus 
+        ? [...favorites, { ...media, isFavorite: true }]
+        : favorites.filter(m => m.id !== media.id)
+      );
+      setContinueWatching(updateMediaList);
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
   };
 
   const handleSearch = async (query: string) => {
@@ -111,6 +149,35 @@ export const Home = () => {
       setSearchResults(results);
     } catch (error) {
       console.error('Search error:', error);
+    }
+  };
+
+  const handleFilterChange = async (newFilters: FilterState) => {
+    setFilters(newFilters);
+    
+    const hasFilters = newFilters.genres.length > 0 || 
+                      newFilters.years.length > 0 || 
+                      newFilters.ratings.length > 0 || 
+                      newFilters.languages.length > 0 || 
+                      newFilters.mediaType !== 'all';
+    
+    if (!hasFilters) {
+      setFilteredResults([]);
+      setIsFiltering(false);
+      return;
+    }
+
+    setIsFiltering(true);
+    try {
+      const client = new JellyfinApiClient();
+      const userId = localStorage.getItem('movixy_user_id')!;
+      const repository = new JellyfinMediaRepository(client, userId);
+      const results = await repository.getFiltered(newFilters);
+      setFilteredResults(results);
+    } catch (error) {
+      console.error('Filter error:', error);
+    } finally {
+      setIsFiltering(false);
     }
   };
 
@@ -133,22 +200,34 @@ export const Home = () => {
 
   const renderSections = () => {
     if (searchResults.length > 0) {
-      return <MovieRow title="Resultados de búsqueda" movies={searchResults} onSelect={handleSelect} />;
+      return <MovieRow title="Resultados de búsqueda" movies={searchResults} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />;
+    }
+
+    if (filters && filteredResults.length > 0) {
+      return <MovieRow title="Resultados filtrados" movies={filteredResults} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />;
+    }
+
+    if (isFiltering) {
+      return (
+        <div style={{ color: 'white', textAlign: 'center', padding: '50px' }}>
+          <p>Buscando...</p>
+        </div>
+      );
     }
 
     switch (currentSection) {
       case 'inicio':
         return (
           <>
-            {continueWatching.length > 0 && <MovieRow title="Continuar viendo" movies={continueWatching} onSelect={handleSelect} />}
-            <MovieRow title="Tendencias" movies={popular} onSelect={handleSelect} />
-            {moviesList.length > 0 && <MovieRow title="Películas" movies={moviesList} onSelect={handleSelect} />}
-            {seriesList.length > 0 && <MovieRow title="Series" movies={seriesList} onSelect={handleSelect} />}
+            {continueWatching.length > 0 && <MovieRow title="Continuar viendo" movies={continueWatching} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />}
+            <MovieRow title="Tendencias" movies={popular} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />
+            {moviesList.length > 0 && <MovieRow title="Películas" movies={moviesList} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />}
+            {seriesList.length > 0 && <MovieRow title="Series" movies={seriesList} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />}
           </>
         );
       case 'movies':
         return moviesList.length > 0 ? (
-          <MovieRow title="Todas las Películas" movies={moviesList} onSelect={handleSelect} />
+          <MovieRow title="Todas las Películas" movies={moviesList} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />
         ) : (
           <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
             <h2>No hay películas</h2>
@@ -156,7 +235,7 @@ export const Home = () => {
         );
       case 'series':
         return seriesList.length > 0 ? (
-          <MovieRow title="Todas las Series" movies={seriesList} onSelect={handleSelect} />
+          <MovieRow title="Todas las Series" movies={seriesList} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />
         ) : (
           <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
             <h2>No hay series</h2>
@@ -164,7 +243,7 @@ export const Home = () => {
         );
       case 'novedades':
         return popular.length > 0 ? (
-          <MovieRow title="Novedades" movies={popular} onSelect={handleSelect} />
+          <MovieRow title="Novedades" movies={popular} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />
         ) : (
           <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
             <h2>No hay novedades</h2>
@@ -172,7 +251,7 @@ export const Home = () => {
         );
       case 'mylist':
         return favorites.length > 0 ? (
-          <MovieRow title="Mi Lista" movies={favorites} onSelect={handleSelect} />
+          <MovieRow title="Mi Lista" movies={favorites} onSelect={handleSelect} onPlay={handlePlay} onToggleFavorite={handleToggleFavorite} />
         ) : (
           <div style={{ color: 'white', textAlign: 'center', padding: '100px' }}>
             <h2>Tu lista está vacía</h2>
@@ -187,7 +266,12 @@ export const Home = () => {
   return (
     <div style={{ paddingBottom: '50px' }}>
       <Navbar onSearch={handleSearch} onNavigate={handleNavigate} currentSection={currentSection} />
-      {heroMovie && currentSection === 'inicio' && (
+      
+      {currentSection === 'inicio' && (
+        <FilterBar onFilterChange={handleFilterChange} />
+      )}
+      
+      {heroMovie && currentSection === 'inicio' && !filters && (
         <Hero 
           movie={heroMovie} 
           onPlay={() => handlePlay(heroMovie)} 
@@ -195,7 +279,12 @@ export const Home = () => {
         />
       )}
       
-      <div style={{ marginTop: heroMovie && currentSection === 'inicio' ? '-100px' : '20px', padding: '0 4%', zIndex: 10, position: 'relative' }}>
+      <div style={{ 
+        marginTop: heroMovie && currentSection === 'inicio' && !filters ? '-100px' : '20px', 
+        padding: '0 4%', 
+        zIndex: 10, 
+        position: 'relative' 
+      }}>
         {renderSections()}
       </div>
 
@@ -215,9 +304,11 @@ export const Home = () => {
             key={playingUrl}
             title={playingMedia.title}
             streamUrl={playingUrl}
+            startPosition={startPosition}
             onClose={() => {
               setPlayingMedia(null);
               setPlayingUrl(null);
+              setStartPosition(undefined);
             }}
           />
         </Suspense>

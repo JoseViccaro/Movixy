@@ -10,6 +10,10 @@ export interface Media {
   seasonNumber?: number;
   episodeNumber?: number;
   isFavorite?: boolean;
+  // Campos para historial de visionado
+  playbackPositionTicks?: number;
+  runtimeTicks?: number;
+  watchedPercentage?: number;
 }
 
 export interface Movie extends Media {

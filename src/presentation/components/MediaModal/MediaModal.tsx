@@ -1,9 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
-import { X, Play, Plus, Check } from 'lucide-react';
+import { useEffect, useState, useRef, lazy, Suspense } from 'react';
+import { X, Play, Plus, Check, Film } from 'lucide-react';
 import styles from './MediaModal.module.css';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
 import type { Media } from '@/domain/models/media.model';
+
+const TrailerModal = lazy(() => import('@/presentation/components/TrailerModal/TrailerModal').then(m => ({ default: m.TrailerModal })));
 
 interface MediaModalProps {
   media: Media;
@@ -16,6 +18,7 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
+  const [showTrailer, setShowTrailer] = useState(false);
   const year = media.releaseDate?.split('-')[0] || 'N/A';
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -89,29 +92,30 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
   };
   
   return (
-    <div 
-      className={styles.overlay} 
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="modal-title"
-    >
+    <>
       <div 
-        className={styles.modal} 
-        onClick={(e) => e.stopPropagation()}
-        role="document"
+        className={styles.overlay} 
+        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
       >
-        <button 
-          ref={closeButtonRef}
-          className={styles.closeButton} 
-          onClick={onClose}
-          aria-label="Cerrar modal"
+        <div 
+          className={styles.modal} 
+          onClick={(e) => e.stopPropagation()}
+          role="document"
         >
-          <X size={24} />
-        </button>
+          <button 
+            ref={closeButtonRef}
+            className={styles.closeButton} 
+            onClick={onClose}
+            aria-label="Cerrar modal"
+          >
+            <X size={24} />
+          </button>
 
-        <div className={styles.hero}>
-          <img 
+          <div className={styles.hero}>
+            <img 
             src={media.backdropPath} 
             alt={`Imagen de ${media.title}`}
             className={styles.backdrop} 
@@ -130,6 +134,14 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
             >
               <Play fill="black" size={24} />
               <span>Reproducir</span>
+            </button>
+
+            <button 
+              className={styles.actionButton} 
+              onClick={() => setShowTrailer(true)}
+              aria-label={`Ver trailer de ${media.title}`}
+            >
+              <Film size={20} />
             </button>
 
             <button 
@@ -187,5 +199,15 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
         </div>
       </div>
     </div>
+
+    {showTrailer && (
+      <Suspense fallback={<div style={{ color: 'white' }}>Cargando trailer...</div>}>
+        <TrailerModal 
+          title={media.title} 
+          onClose={() => setShowTrailer(false)} 
+        />
+      </Suspense>
+    )}
+  </>
   );
 };

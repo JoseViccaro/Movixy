@@ -7,6 +7,7 @@ interface VideoPlayerProps {
   streamUrl: string;
   onClose: () => void;
   title: string;
+  startPosition?: number; // En segundos
 }
 
 interface SubtitleTrack {
@@ -15,7 +16,7 @@ interface SubtitleTrack {
   lang: string;
 }
 
-export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => {
+export const VideoPlayer = ({ streamUrl, onClose, title, startPosition }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>([]);
@@ -133,6 +134,9 @@ export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => 
     if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = streamUrl;
       video.addEventListener('loadedmetadata', () => {
+        if (startPosition && startPosition > 0) {
+          video.currentTime = startPosition;
+        }
         video.play().catch((err) => console.log('Autoplay prevented:', err));
       });
     } else if (Hls.isSupported()) {
@@ -168,6 +172,9 @@ export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => 
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         loadSubtitleTracks(hls);
+        if (startPosition && startPosition > 0) {
+          video.currentTime = startPosition;
+        }
         video.play().catch((err) => {
           console.log('Autoplay blocked:', err);
         });
@@ -180,7 +187,7 @@ export const VideoPlayer = ({ streamUrl, onClose, title }: VideoPlayerProps) => 
         hlsRef.current = null;
       }
     };
-  }, [streamUrl]);
+  }, [streamUrl, startPosition]);
 
   const handleSubtitleChange = (trackId: number) => {
     if (hlsRef.current) {
