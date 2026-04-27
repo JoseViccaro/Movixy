@@ -107,7 +107,7 @@ export const Home = () => {
   if (isInitialLoading && !playingMedia && !selectedMedia) {
     return (
       <div style={{ backgroundColor: '#141414', minHeight: '100vh' }}>
-        <Navbar onNavigate={handleNavigate} currentSection={currentSection} />
+        <Navbar onNavigate={handleNavigate} onSelectMedia={() => {}} currentSection={currentSection} />
         <Skeleton type="hero" />
         <div style={{ padding: '20px 4%', marginTop: '-100px', display: 'flex', gap: '15px', overflow: 'hidden' }}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -259,7 +259,12 @@ export const Home = () => {
 
   return (
     <div style={{ paddingBottom: '50px' }}>
-      <Navbar onSearch={handleSearch} onNavigate={handleNavigate} currentSection={currentSection} />
+      <Navbar 
+        onSearch={handleSearch} 
+        onNavigate={handleNavigate} 
+        onSelectMedia={handleSelect}
+        currentSection={currentSection} 
+      />
 
       {currentSection === 'inicio' && <FilterBar onFilterChange={handleFilterChange} />}
 

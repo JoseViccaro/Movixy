@@ -1,16 +1,19 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
 import { Search } from 'lucide-react';
 import { UserProfile } from '@/presentation/components/UserProfile/UserProfile';
+import { QuickSearch } from './QuickSearch';
 import { secureStorage } from '@/core/utils/secure-storage';
 import styles from './Navbar.module.css';
+import type { Media } from '@/domain/models/media.model';
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
   onNavigate?: (section: string) => void;
+  onSelectMedia?: (media: Media) => void;
   currentSection?: string;
 }
 
-export const Navbar = ({ onSearch, onNavigate, currentSection = 'inicio' }: NavbarProps) => {
+export const Navbar = ({ onSearch, onNavigate, onSelectMedia, currentSection = 'inicio' }: NavbarProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,16 +86,25 @@ export const Navbar = ({ onSearch, onNavigate, currentSection = 'inicio' }: Navb
             aria-label="Abrir búsqueda"
           />
           {isSearchActive && (
-            <input
-              type="text"
-              placeholder="Títulos, personas, géneros"
-              value={searchQuery}
-              onChange={handleSearchChange}
-              onKeyDown={handleSearchKeyDown}
-              autoFocus
-              className={styles.searchInput}
-              aria-label="Buscar contenido"
-            />
+            <>
+              <input
+                type="text"
+                placeholder="Títulos, personas, géneros"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyDown={handleSearchKeyDown}
+                autoFocus
+                className={styles.searchInput}
+                aria-label="Buscar contenido"
+              />
+              <QuickSearch 
+                query={searchQuery} 
+                onSelect={(media) => {
+                  onSelectMedia?.(media);
+                  handleSearchClear();
+                }} 
+              />
+            </>
           )}
         </div>
         <span>Niños</span>
