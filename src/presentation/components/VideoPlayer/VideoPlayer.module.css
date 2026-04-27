@@ -1,142 +1,358 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   VideoPlayer — Premium Custom Controls
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-.overlay {
+.playerRoot {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.95);
+  inset: 0;
+  background: #000;
   z-index: 1000;
   display: flex;
+  align-items: center;
   justify-content: center;
-  align-items: center;
+  cursor: none;
 }
 
-.container {
-  width: 90%;
-  max-width: 1200px;
-  background-color: #141414;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+.playerRoot:hover {
+  cursor: default;
 }
 
-.header {
-  padding: 15px 20px;
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Center clickable area ─────────────────────────────────────────────────── */
+.centerArea {
+  position: absolute;
+  inset: 80px 0 120px 0;
+  cursor: pointer;
+}
+
+/* ── Seek Flash Indicators ──────────────────────────────────────────────────── */
+.seekIndicator {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  padding: 12px 20px;
+  pointer-events: none;
+  animation: seekFade 0.7s ease forwards;
+}
+
+.seekLeft  { left: 10%; }
+.seekRight { right: 10%; }
+
+@keyframes seekFade {
+  0%   { opacity: 1; transform: translateY(-50%) scale(1); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-50%) scale(0.9); }
+}
+
+/* ── Buffering Spinner ──────────────────────────────────────────────────────── */
+.bufferingOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 52px;
+  height: 52px;
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #e50914;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Controls Overlay ───────────────────────────────────────────────────────── */
+.controls {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
   justify-content: space-between;
-  align-items: center;
-  background-color: #181818;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
-.headerActions {
+.controlsVisible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.controlsHidden {
+  opacity: 0;
+  pointer-events: none;
+  cursor: none;
+}
+
+/* ── Top Bar ────────────────────────────────────────────────────────────────── */
+.topBar {
   display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: space-between;
+  padding: 20px 28px 40px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%);
 }
 
 .title {
   color: white;
+  font-size: 1.15rem;
+  font-weight: 600;
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 500;
-}
-
-.subtitlesMenuContainer {
-  position: relative;
-}
-
-.subtitlesButton {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.subtitlesButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: white;
-}
-
-.subtitlesMenu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 5px;
-  background-color: #232323;
-  border-radius: 4px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  max-width: 70%;
+  white-space: nowrap;
   overflow: hidden;
-  min-width: 150px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+  text-overflow: ellipsis;
 }
 
-.subtitleOption {
-  display: block;
+/* ── Bottom Bar ─────────────────────────────────────────────────────────────── */
+.bottomBar {
+  padding: 40px 28px 20px;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Progress Bar ───────────────────────────────────────────────────────────── */
+.progressContainer {
+  position: relative;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.progressContainer:hover .progressThumb {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+.progressContainer:hover .progressTrack {
+  height: 5px;
+}
+
+.progressTrack {
+  position: relative;
   width: 100%;
-  padding: 10px 15px;
-  background: none;
-  border: none;
-  color: #a3a3a3;
-  text-align: left;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 99px;
+  transition: height 0.15s ease;
+  overflow: visible;
 }
 
-.subtitleOption:hover {
-  background-color: #333;
-  color: white;
+.progressFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #e50914;
+  border-radius: 99px;
+  transition: width 0.1s linear;
 }
 
-.subtitleOption.active {
-  background-color: #464646;
-  color: white;
-}
-
-.closeButton {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 5px;
+.progressThumb {
+  position: absolute;
+  top: 50%;
+  transform: translateX(-50%) translateY(-50%) scale(0);
+  width: 14px;
+  height: 14px;
+  background: white;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+  pointer-events: none;
+}
+
+.hoverTime {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── Bottom Row ─────────────────────────────────────────────────────────────── */
+.bottomRow {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.leftControls,
+.rightControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.controlButton {
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
+.iconBtn {
   background: none;
   border: none;
   color: white;
   cursor: pointer;
   padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: background 0.15s, transform 0.1s;
 }
 
-.controlButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.iconBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
 }
 
-.video {
+.textBtn {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.textBtn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: white;
+}
+
+/* ── Volume ─────────────────────────────────────────────────────────────────── */
+.volumeGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.volumeSlider {
+  width: 0;
+  opacity: 0;
+  transition: width 0.2s ease, opacity 0.2s ease;
+  accent-color: white;
+  cursor: pointer;
+}
+
+.volumeGroup:hover .volumeSlider,
+.volumeSlider:focus {
+  width: 70px;
+  opacity: 1;
+}
+
+/* ── Time ───────────────────────────────────────────────────────────────────── */
+.time {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  padding-left: 4px;
+}
+
+/* ── Dropdown Menus ─────────────────────────────────────────────────────────── */
+.menuWrapper {
+  position: relative;
+}
+
+.dropdownMenu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  right: 0;
+  background: rgba(18, 18, 18, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 130px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  animation: menuIn 0.15s ease;
+}
+
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.menuLabel {
+  color: rgba(255,255,255,0.4);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 10px 14px 4px;
+  margin: 0;
+}
+
+.menuItem {
+  display: block;
   width: 100%;
-  aspect-ratio: 16 / 9;
-  outline: none;
-  background-color: black;
+  padding: 8px 14px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.8);
+  text-align: left;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.menuItem:hover {
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+.menuItemActive {
+  color: #e50914;
+  font-weight: 700;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .topBar,
+  .bottomBar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .volumeGroup .volumeSlider {
+    display: none;
+  }
+
+  .time {
+    font-size: 0.72rem;
+  }
 }
