@@ -1,230 +1,15 @@
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.75);
-  z-index: 1000;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 200;
   display: flex;
   justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(5px);
-  animation: fadeIn 0.3s ease-out;
-}
-
-.modal {
-  background-color: #141414;
-  width: 90%;
-  max-width: 850px;
-  max-height: 90vh;
-  border-radius: 12px;
-  overflow: hidden;
-  position: relative;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.3s ease-out;
-  display: flex;
-  flex-direction: column;
-}
-
-.closeButton {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  background-color: #181818;
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  z-index: 10;
-  transition: all 0.2s ease;
-}
-
-.closeButton:hover {
-  background-color: white;
-  color: black;
-  border-color: white;
-}
-
-.hero {
-  position: relative;
-  width: 100%;
-  height: 400px;
-}
-
-.backdrop {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 20%;
-}
-
-.heroGradient {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 150px;
-  background: linear-gradient(to top, #141414, transparent);
-}
-
-.content {
-  padding: 0 40px 40px 40px;
+  align-items: flex-start;
+  padding: 40px 20px;
   overflow-y: auto;
-  margin-top: -60px;
-  position: relative;
-  z-index: 2;
-}
-
-.title {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: white;
-  margin: 0 0 20px 0;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-}
-
-.actions {
-  display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.playButton {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 30px;
-  background-color: white;
-  color: black;
-  border: none;
-  border-radius: 4px;
-  font-size: 1.2rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.playButton:hover {
-  background-color: rgba(255, 255, 255, 0.75);
-}
-
-.actionButton {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 46px;
-  height: 46px;
-  background-color: rgba(109, 109, 110, 0.7);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.actionButton:hover {
-  background-color: rgba(109, 109, 110, 0.5);
-  border: 2px solid white;
-}
-
-.actionButton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.meta {
-  display: flex;
-  gap: 15px;
-  color: #a3a3a3;
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-  font-weight: 500;
-}
-
-.rating {
-  color: #46d369;
-  font-weight: bold;
-}
-
-.overview {
-  color: white;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  max-width: 600px;
-  margin-bottom: 40px;
-}
-
-.episodesSection {
-  margin-top: 20px;
-}
-
-.episodesTitle {
-  color: white;
-  font-size: 1.5rem;
-  margin-bottom: 20px;
-}
-
-.episodesList {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.episodeRow {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 15px;
-  background-color: #232323;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.episodeRow:hover {
-  background-color: #333;
-}
-
-.episodePlay {
-  width: 32px;
-  height: 32px;
-  border: 1px solid white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.episodeInfo {
-  flex: 1;
-}
-
-.episodeName {
-  color: white;
-  margin: 0 0 5px 0;
-  font-size: 1.1rem;
-}
-
-.episodeOverview {
-  color: #a3a3a3;
-  font-size: 0.9rem;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.loadingText {
-  color: #a3a3a3;
-  font-style: italic;
+  animation: fadeIn 0.3s ease-out;
 }
 
 @keyframes fadeIn {
@@ -232,19 +17,325 @@
   to { opacity: 1; }
 }
 
-@keyframes slideUp {
-  from { transform: translateY(50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+.modal {
+  background: #181818;
+  width: 100%;
+  max-width: 850px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  animation: modalEnter 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  transform-origin: center;
 }
 
+@keyframes modalEnter {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.closeButton {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.closeButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+}
+
+/* ── Hero Section ── */
+.hero {
+  position: relative;
+  height: 480px;
+  width: 100%;
+}
+
+.backdrop {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heroGradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #181818 0%, transparent 50%),
+              linear-gradient(to right, rgba(24, 24, 24, 0.4) 0%, transparent 100%);
+}
+
+/* ── Content ── */
+.content {
+  padding: 0 40px 40px;
+  margin-top: -80px;
+  position: relative;
+  z-index: 2;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #46d369;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.year {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.typeBadge {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* ── Actions ── */
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.playButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  color: black;
+  border: none;
+  padding: 8px 30px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.playButton:hover {
+  background: rgba(255, 255, 255, 0.75);
+  transform: scale(1.05);
+}
+
+.actionButton {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(42, 42, 42, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.actionButton:hover {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.activeIcon {
+  color: #46d369;
+}
+
+/* ── Overview ── */
+.overview {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: white;
+  margin-bottom: 40px;
+  max-width: 80%;
+}
+
+/* ── Episodes Section ── */
+.episodesSection {
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+  padding-top: 30px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.episodesTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: white;
+}
+
+.count {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+}
+
+.episodesList {
+  display: flex;
+  flex-direction: column;
+}
+
+.episodeRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 8px;
+}
+
+.episodeRow:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.episodeNumber {
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  min-width: 24px;
+}
+
+.episodeThumbnailWrapper {
+  position: relative;
+  width: 140px;
+  height: 80px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.episodeThumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.episodePlayOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.episodeRow:hover .episodePlayOverlay {
+  opacity: 1;
+}
+
+.episodeInfo {
+  flex-grow: 1;
+}
+
+.episodeName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 6px;
+}
+
+.episodeOverview {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.6);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Skeletons ── */
+.episodesSkeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.skeletonRow {
+  height: 120px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  animation: shimmer 1.5s infinite linear;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* ── Responsive ── */
 @media (max-width: 768px) {
   .hero {
-    height: 250px;
+    height: 300px;
   }
+  
+  .content {
+    padding: 0 20px 20px;
+    margin-top: -60px;
+  }
+  
   .title {
     font-size: 1.8rem;
   }
-  .content {
-    padding: 0 20px 20px 20px;
+  
+  .overview {
+    max-width: 100%;
+    font-size: 1rem;
+  }
+  
+  .episodeThumbnailWrapper {
+    width: 100px;
+    height: 60px;
+  }
+  
+  .episodeNumber {
+    display: none;
   }
 }

@@ -1,5 +1,6 @@
 import { Play, Info, Star } from 'lucide-react';
 import styles from './Hero.module.css';
+import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
 import type { Media } from '@/domain/models/media.model';
 
 interface HeroProps {
@@ -14,7 +15,12 @@ export const Hero = ({ movie, onPlay, onMoreInfo }: HeroProps) => {
   return (
     <div className={styles.hero}>
       <div className={styles.imageContainer}>
-        <img src={movie.backdropPath} alt={movie.title} className={styles.image} />
+        <OptimizedImage 
+          src={movie.backdropPath} 
+          alt={movie.title} 
+          className={styles.image} 
+          priority={true}
+        />
         <div className={styles.vignette}></div>
         <div className={styles.bottomFade}></div>
       </div>

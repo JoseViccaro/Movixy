@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Play, Info, Plus, Check, Heart } from 'lucide-react';
 import { ContextMenu, type ContextMenuItem } from '@/presentation/components/ContextMenu/ContextMenu';
+import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
 import styles from './MovieRow.module.css';
 import type { Media } from '@/domain/models/media.model';
 
@@ -81,11 +82,10 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
               aria-label={`${movie.title}, calificación ${movie.voteAverage}`}
             >
               {/* Poster Image */}
-              <img
+              <OptimizedImage
                 src={movie.posterPath}
                 alt={`Póster de ${movie.title}`}
                 className={styles.poster}
-                loading="lazy"
               />
 
               {/* Watched progress bar */}
