@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
+import { secureStorage } from '@/core/utils/secure-storage';
 
 vi.mock('@/core/config/jellyfin.config', () => ({
   jellyfinConfig: {
@@ -14,6 +15,7 @@ describe('JellyfinApiClient', () => {
 
   beforeEach(() => {
     client = new JellyfinApiClient();
+    localStorage.clear();
   });
 
   describe('getImageUrl', () => {
@@ -29,18 +31,15 @@ describe('JellyfinApiClient', () => {
   });
 
   describe('getStreamUrl', () => {
-    beforeEach(() => {
-      localStorage.clear();
-    });
-
-    it('returns stream URL with token from localStorage', () => {
-      localStorage.setItem('movixy_token', 'local-token');
+    it('returns stream URL with secure token from storage', () => {
+      secureStorage.setToken('secure-test-token');
       const url = client.getStreamUrl('item789');
       expect(url).toContain('Videos/item789/master.m3u8');
-      expect(url).toContain('api_key=local-token');
+      expect(url).toContain('api_key=secure-test-token');
+      secureStorage.clearToken();
     });
 
-    it('falls back to config API key when no local token', () => {
+    it('falls back to config API key when no stored token', () => {
       const url = client.getStreamUrl('item789');
       expect(url).toContain('api_key=test-api-key');
     });
@@ -55,6 +54,21 @@ describe('JellyfinApiClient', () => {
       const url = client.getStreamUrl('item789');
       expect(url).toContain('MaxWidth=1920');
       expect(url).toContain('MaxHeight=1080');
+    });
+  });
+
+  describe('secureStorage', () => {
+    it('encodes and decodes token correctly', () => {
+      secureStorage.setToken('my-secret-token');
+      expect(secureStorage.getToken()).toBe('my-secret-token');
+      expect(secureStorage.isAuthenticated()).toBe(true);
+      secureStorage.clearToken();
+      expect(secureStorage.isAuthenticated()).toBe(false);
+    });
+
+    it('returns null for invalid encoded data', () => {
+      localStorage.setItem('movixy_secure_token_v1', 'invalid-data');
+      expect(secureStorage.getToken()).toBeNull();
     });
   });
 });

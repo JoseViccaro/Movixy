@@ -1,4 +1,5 @@
 import { jellyfinConfig } from '@/core/config/jellyfin.config';
+import { secureStorage } from '@/core/utils/secure-storage';
 
 /**
  * JellyfinApiClient — Capa de infraestructura (Data Layer)
@@ -25,8 +26,9 @@ export class JellyfinApiClient {
       });
 
       if (response.status === 401) {
-        localStorage.removeItem('movixy_token');
+        secureStorage.clearToken();
         localStorage.removeItem('movixy_user_id');
+        localStorage.removeItem('movixy_username');
         window.location.reload();
         throw new Error('Unauthorized');
       }
@@ -161,6 +163,21 @@ export class JellyfinApiClient {
     return this.request<JellyfinItemsResponse>(`/Users/${userId}/Items?${params}`);
   }
 
+  /** Obtener perfil público del servidor (lista de usuarios) */
+  async getPublicUsers() {
+    return this.request<JellyfinPublicUser[]>('/Users/Public');
+  }
+
+  /** Obtener perfil completo del usuario actual */
+  async getUserProfile(userId: string) {
+    return this.request<JellyfinUser>(`/Users/${userId}`);
+  }
+
+  /** Obtener URL de imagen de usuario (avatar) */
+  getUserImageUrl(userId: string): string {
+    return `${this.baseUrl}/Users/${userId}/Images/Primary?size=200&quality=90`;
+  }
+
   /** Obtener datos de usuario para un item (saber si es favorito) */
   async getItemUserData(userId: string, itemId: string) {
     return this.request<JellyfinUserItemData>(`/Users/${userId}/Items/${itemId}/UserData`);
@@ -182,7 +199,7 @@ export class JellyfinApiClient {
 
   /** Obtener URL de streaming de un item */
   getStreamUrl(itemId: string): string {
-    const token = localStorage.getItem('movixy_token') || jellyfinConfig.apiKey;
+    const token = secureStorage.getToken() || jellyfinConfig.apiKey;
     
     // URL con parámetros de transcodificación robustos para evitar stuttering y errores 500
     const params = new URLSearchParams({
@@ -248,4 +265,23 @@ export interface JellyfinUserItemData {
   Played: boolean;
   PlaybackPositionTicks: number;
   PlayCount: number;
+}
+
+export interface JellyfinPublicUser {
+  Id: string;
+  Name: string;
+  HasPassword: boolean;
+  HasConfiguredPassword: boolean;
+}
+
+export interface JellyfinUser {
+  Id: string;
+  Name: string;
+  ServerName?: string;
+  PrimaryImageAspectRatio?: number;
+  SyncPlayAccess: string;
+  HasPassword: boolean;
+  HasConfiguredPassword: boolean;
+  LastLoginDate?: string;
+  LastActivityDate?: string;
 }

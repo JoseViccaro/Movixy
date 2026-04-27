@@ -5,15 +5,16 @@ import { ErrorBoundary } from './presentation/components/ErrorBoundary/ErrorBoun
 import { OfflineIndicator } from './presentation/components/OfflineIndicator/OfflineIndicator';
 import { ToastProvider } from './presentation/components/Toast/Toast';
 import { JellyfinApiClient } from './data/sources/jellyfin-api.client';
+import { secureStorage } from './core/utils/secure-storage';
 import './index.css';
 
 type AppState = 'login' | 'home';
 
 function App() {
   const [appState, setAppState] = useState<AppState>(() => {
-    const token = localStorage.getItem('movixy_token');
+    const isAuth = secureStorage.isAuthenticated();
     const userId = localStorage.getItem('movixy_user_id');
-    return token && userId ? 'home' : 'login';
+    return isAuth && userId ? 'home' : 'login';
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +27,7 @@ function App() {
       const client = new JellyfinApiClient();
       const response = await client.authenticate(username, password);
       
-      localStorage.setItem('movixy_token', response.AccessToken);
+      secureStorage.setToken(response.AccessToken);
       localStorage.setItem('movixy_user_id', response.User.Id);
       localStorage.setItem('movixy_username', response.User.Name);
       

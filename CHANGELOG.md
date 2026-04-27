@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Tests** - Vitest con React Testing Library (19 tests)
 - **CI/CD** - GitHub Actions workflow
 - **Pre-commit hooks** - Husky + lint-staged
+- **Perfil de usuario** - Avatar, nombre, cambiar entre usuarios de Jellyfin
+- **Seguridad** - Token cifrado en localStorage (base64 + reverse)
 
 ### Changed
 - Updated README with custom Movixy documentation

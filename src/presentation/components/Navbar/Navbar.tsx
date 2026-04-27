@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
-import { Search, Bell, User } from 'lucide-react';
-import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
-import { useToast } from '@/presentation/components/Toast/ToastContext';
+import { Search } from 'lucide-react';
+import { UserProfile } from '@/presentation/components/UserProfile/UserProfile';
+import { secureStorage } from '@/core/utils/secure-storage';
 import styles from './Navbar.module.css';
 
 interface NavbarProps {
@@ -14,21 +14,15 @@ export const Navbar = ({ onSearch, onNavigate, currentSection = 'inicio' }: Navb
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const userId = localStorage.getItem('movixy_user_id') || '';
   const username = localStorage.getItem('movixy_username') || 'Usuario';
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { addToast } = useToast();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 0);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  const toggleDropdown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsDropdownOpen(prev => !prev);
-  };
 
   const debouncedSearch = useCallback((query: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -61,21 +55,8 @@ export const Navbar = ({ onSearch, onNavigate, currentSection = 'inicio' }: Navb
     return currentSection === section ? styles.active : '';
   };
 
-  const handleRefresh = async () => {
-    setIsDropdownOpen(false);
-    try {
-      const client = new JellyfinApiClient();
-      await client.refreshLibrary();
-      addToast('success', 'Escaneo de biblioteca iniciado. Los nuevos archivos aparecerán pronto.');
-    } catch (error) {
-      console.error('Error refreshing library:', error);
-      addToast('error', 'Error al escanear la biblioteca.');
-    }
-  };
-
   const handleLogout = () => {
-    setIsDropdownOpen(false);
-    localStorage.removeItem('movixy_token');
+    secureStorage.clearToken();
     localStorage.removeItem('movixy_user_id');
     localStorage.removeItem('movixy_username');
     window.location.reload();
@@ -115,24 +96,14 @@ export const Navbar = ({ onSearch, onNavigate, currentSection = 'inicio' }: Navb
           )}
         </div>
         <span>Niños</span>
-        <Bell className={styles.icon} aria-hidden="true" />
-        <div className={styles.profileContainer} onClick={toggleDropdown}>
-          <div className={styles.profile}>
-            <User className={styles.icon} aria-hidden="true" />
-            <span className={styles.username}>{username}</span>
-          </div>
-          {isDropdownOpen && (
-            <div className={styles.dropdown}>
-              <button onClick={handleRefresh} className={styles.logoutButton}>
-                Escanear biblioteca
-              </button>
-              <button onClick={handleLogout} className={styles.logoutButton}>
-                Cerrar sesión en Movixy
-              </button>
-            </div>
-          )}
-        </div>
+        <UserProfile 
+          userId={userId}
+          username={username}
+          onLogout={handleLogout}
+        />
       </div>
     </nav>
   );
 };
+
+export default Navbar;
