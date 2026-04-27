@@ -1,6 +1,8 @@
 import { jellyfinConfig } from '@/core/config/jellyfin.config';
 import { secureStorage } from '@/core/utils/secure-storage';
 
+const PLAY_SESSION_ID = `movixy-${Math.random().toString(36).substring(2, 11)}`;
+
 /**
  * JellyfinApiClient — Capa de infraestructura (Data Layer)
  * Se encarga de todas las llamadas HTTP al servidor Jellyfin.
@@ -16,8 +18,10 @@ export class JellyfinApiClient {
   }
 
   private async request<T>(endpoint: string, options?: RequestInit, retries = 0): Promise<T> {
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
+    
     try {
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetch(url, {
         ...options,
         headers: {
           ...jellyfinConfig.headers(),
@@ -29,7 +33,6 @@ export class JellyfinApiClient {
         secureStorage.clearToken();
         localStorage.removeItem('movixy_user_id');
         localStorage.removeItem('movixy_username');
-        window.location.reload();
         throw new Error('Unauthorized');
       }
 
@@ -210,22 +213,25 @@ export class JellyfinApiClient {
   getStreamUrl(itemId: string): string {
     const token = secureStorage.getToken() || jellyfinConfig.apiKey;
     
-    // URL con parámetros de transcodificación robustos para evitar stuttering y errores 500
+    // Configuración optimizada para máxima compatibilidad (Browsers/TV)
+    // Forzamos H264 y AAC que es lo que soportan todos los navegadores
     const params = new URLSearchParams({
       'api_key': token,
-      'MediaSourceId': itemId, // Requerido por Jellyfin para transcoding
+      'MediaSourceId': itemId,
       'VideoCodec': 'h264',
-      'AudioCodec': 'aac,mp3', // Fallback for audio
-      'MaxStreamingBitrate': '14000000', // Limitar a 14 Mbps para 1080p estable
-      'TranscodingMaxAudioChannels': '2', // Forzar estéreo para compatibilidad web
-      'MaxWidth': '1920',
-      'MaxHeight': '1080',
+      'AudioCodec': 'aac',
+      'AudioSampleRate': '44100',
+      'TranscodingMaxAudioChannels': '2',
+      'MaxStreamingBitrate': '10000000', // 10 Mbps es ideal para 1080p sin cortes
       'RequireAvc': 'true',
-      'RequireNonAnamorphic': 'false',
-      'PlaySessionId': `movixy-${Date.now()}`
+      'RequireNonAnamorphic': 'true',
+      'DeInterlace': 'true',
+      'PlaySessionId': PLAY_SESSION_ID
     });
 
-    return `${this.baseUrl}/Videos/${itemId}/master.m3u8?${params.toString()}`;
+    // Si estamos usando el proxy, nos aseguramos de que la URL de stream sea relativa
+    const base = this.baseUrl === '/jellyfin' ? '/jellyfin' : this.baseUrl;
+    return `${base}/Videos/${itemId}/master.m3u8?${params.toString()}`;
   }
 }
 

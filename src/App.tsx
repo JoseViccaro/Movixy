@@ -19,11 +19,29 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async (_serverUrl: string, username: string, password: string) => {
+  const handleLogin = async (serverUrl: string, username: string, password: string) => {
     setIsLoading(true);
     setError(null);
-
     try {
+      // Normalizamos la URL por si el usuario se olvidó el http://
+      let formattedUrl = serverUrl.trim();
+      if (!formattedUrl.startsWith('http') && !formattedUrl.startsWith('/')) {
+        formattedUrl = `http://${formattedUrl}`;
+      }
+      // Quitamos la barra final si existe para evitar URLs dobles
+      if (formattedUrl.endsWith('/')) {
+        formattedUrl = formattedUrl.slice(0, -1);
+      }
+
+      // TRUCO MAESTRO: Si la URL es la de nuestro Jellyfin local, usamos el PROXY
+      // Esto evita problemas de CORS en la TV.
+      const currentHost = window.location.hostname;
+      if (formattedUrl.includes(currentHost) && formattedUrl.includes(':8096')) {
+        formattedUrl = '/jellyfin';
+      }
+
+      localStorage.setItem('movixy_server_url', formattedUrl);
+      
       const client = new JellyfinApiClient();
       const response = await client.authenticate(username, password);
       
@@ -32,9 +50,13 @@ function App() {
       localStorage.setItem('movixy_username', response.User.Name);
       
       setAppState('home');
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Login error:', err);
-      setError('Credenciales incorrectas o servidor no disponible.');
+      if (err instanceof Error && err.message.includes('401')) {
+        setError('Contraseña o usuario incorrectos. Verificalos e intentá de nuevo.');
+      } else {
+        setError('No se pudo conectar al servidor. Verificá que la URL sea correcta y que el servidor esté encendido.');
+      }
     } finally {
       setIsLoading(false);
     }

@@ -51,11 +51,19 @@
               z-index 0s 0.35s;
 }
 
-.card:hover {
+.card:hover,
+.card:focus,
+.card:focus-within {
   transform: scale(1.4);
   z-index: 50;
   transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1),
               z-index 0s;
+  outline: none;
+}
+
+.card:focus,
+.card:focus-within {
+  box-shadow: 0 0 0 4px #e50914, 0 10px 40px rgba(0,0,0,0.8);
 }
 
 /* ── Poster ──────────────────────────────────────────────────────────────────── */
@@ -108,7 +116,9 @@
   z-index: 51;
 }
 
-.card:hover .hoverOverlay {
+.card:hover .hoverOverlay,
+.card:focus .hoverOverlay,
+.card:focus-within .hoverOverlay {
   opacity: 1;
   transform: translateY(0);
   pointer-events: all;
@@ -136,9 +146,11 @@
   padding-left: 2px;
 }
 
-.playBtn:hover {
+.playBtn:hover,
+.playBtn:focus {
   background: rgba(255, 255, 255, 0.85);
   transform: scale(1.1);
+  outline: 2px solid white;
 }
 
 .actionBtn {
@@ -155,10 +167,18 @@
   color: white;
 }
 
-.actionBtn:hover {
+.actionBtn:hover,
+.actionBtn:focus {
   border-color: white;
   background: rgba(255, 255, 255, 0.1);
   transform: scale(1.1);
+  outline: 2px solid white;
+}
+.actionBtn:focus {
+  border-color: white;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+  outline: 2px solid white;
 }
 
 /* ── Card Meta ───────────────────────────────────────────────────────────────── */

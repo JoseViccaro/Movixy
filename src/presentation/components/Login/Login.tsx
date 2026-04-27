@@ -9,13 +9,18 @@ interface LoginProps {
 }
 
 export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
-  const [serverUrl, setServerUrl] = useState('http://localhost:8096');
-  const [username, setUsername] = useState('');
+  const [serverUrl, setServerUrl] = useState(() => {
+    return localStorage.getItem('movixy_server_url') || 'http://localhost:8096';
+  });
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem('movixy_username') || '';
+  });
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    localStorage.setItem('movixy_username', username);
     onLogin(serverUrl, username, password);
   };
 
@@ -40,6 +45,7 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
               onChange={(e) => setServerUrl(e.target.value)}
               className={styles.input}
             />
+            <p className={styles.inputHint}>Usa tu IP local si estás en la tele (ej: 192.168.1.50)</p>
           </div>
 
           <div className={styles.inputGroup}>

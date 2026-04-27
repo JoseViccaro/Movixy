@@ -41,6 +41,26 @@ export default defineConfig({
       '@presentation': path.resolve(__dirname, './src/presentation'),
       '@core': path.resolve(__dirname, './src/core'),
     }
+  },
+  server: {
+    host: true,
+    proxy: {
+      '/jellyfin': {
+        target: 'http://localhost:8096',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/jellyfin/, ''),
+        ws: true, // Habilitar websockets por si Jellyfin los usa
+        configure: (proxy) => {
+          proxy.on('error', (err) => {
+            console.log('proxy error', err);
+          });
+          proxy.on('proxyReq', (_proxyReq, req) => {
+            // Aumentar el timeout para videos pesados
+            req.setTimeout(30000);
+          });
+        },
+      }
+    }
   }
 })
 

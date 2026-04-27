@@ -19,6 +19,7 @@ import {
   Settings,
 } from 'lucide-react';
 import Hls from 'hls.js';
+import { useToast } from '@/presentation/components/Toast/ToastContext';
 import styles from './VideoPlayer.module.css';
 
 interface VideoPlayerProps {
@@ -66,6 +67,7 @@ export const VideoPlayer = ({ streamUrl, onClose, title, startPosition }: VideoP
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [hoverTime, setHoverTime] = useState<{ time: number; x: number } | null>(null);
   const [isBuffering, setIsBuffering] = useState(false);
+  const { addToast } = useToast();
   const [seekIndicator, setSeekIndicator] = useState<{ direction: 'forward' | 'back'; visible: boolean }>({
     direction: 'forward',
     visible: false,
@@ -193,7 +195,40 @@ export const VideoPlayer = ({ streamUrl, onClose, title, startPosition }: VideoP
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = 'auto';
     };
-  }, [onClose, togglePlayPause, toggleFullscreen, toggleMute, seek, volume]);
+  }, [onClose, togglePlayPause, toggleFullscreen, toggleMute, seek, volume, handleVolumeChange]);
+
+  // ── Wake Lock (Keep screen on) ──────────────────────────────────────────
+  useEffect(() => {
+    let wakeLock: WakeLockSentinel | null = null;
+
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await (navigator as unknown as { wakeLock: { request: (type: string) => Promise<WakeLockSentinel> } }).wakeLock.request('screen');
+        }
+      } catch (err: unknown) {
+        console.error('Wake Lock failed:', err);
+      }
+    };
+
+    requestWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (wakeLock !== null) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // ── Fullscreen change listener ────────────────────────────────────────────
   useEffect(() => {
@@ -239,10 +274,30 @@ export const VideoPlayer = ({ streamUrl, onClose, title, startPosition }: VideoP
       hlsRef.current = hls;
 
       hls.on(Hls.Events.ERROR, (_event, data) => {
+        console.error('HLS Error:', data);
         if (data.fatal) {
-          if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
-          else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
-          else hls.destroy();
+          const lastPos = video.currentTime;
+          switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+              console.log('Network error, trying to recover...');
+              hls.startLoad();
+              break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+              console.log('Media error, trying to recover...');
+              hls.recoverMediaError();
+              // Forzamos el salto a la última posición conocida tras recuperar
+              setTimeout(() => {
+                if (video.currentTime === 0 && lastPos > 0) {
+                  video.currentTime = lastPos;
+                  video.play().catch(() => {});
+                }
+              }, 100);
+              break;
+            default:
+              addToast('error', 'Error crítico de reproducción. Revisá el servidor o el formato del archivo.');
+              hls.destroy();
+              break;
+          }
         }
       });
 
@@ -277,7 +332,7 @@ export const VideoPlayer = ({ streamUrl, onClose, title, startPosition }: VideoP
         hlsRef.current = null;
       }
     };
-  }, [streamUrl, startPosition, resetHideTimer]);
+  }, [streamUrl, startPosition, resetHideTimer, addToast]);
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 

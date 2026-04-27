@@ -118,6 +118,12 @@ export class JellyfinMediaRepository implements IMediaRepository {
       ? Math.round((playbackPositionTicks / runtimeTicks) * 100) 
       : 0;
 
+    // Determinamos el tipo de media de forma más robusta
+    let mediaType: 'movie' | 'tv' | 'episode' = 'movie';
+    if (item.Type === 'Series') mediaType = 'tv';
+    else if (item.Type === 'Episode') mediaType = 'episode';
+    // Si es Folder o Movie, lo tratamos como movie para que sea reproducible directamente
+    
     return {
       id: item.Id,
       title: title,
@@ -128,7 +134,7 @@ export class JellyfinMediaRepository implements IMediaRepository {
         : this.client.getImageUrl(item.Id, 'Primary', 1280),
       releaseDate: item.ProductionYear?.toString() || '',
       voteAverage: item.CommunityRating || 0,
-      mediaType: item.Type === 'Movie' ? 'movie' : (item.Type === 'Episode' ? 'episode' : 'tv'),
+      mediaType,
       playbackPositionTicks,
       runtimeTicks,
       watchedPercentage,

@@ -30,7 +30,8 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
 
   const handleKeyDown = (e: React.KeyboardEvent, movie: Media) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      onSelect(movie);
+      e.preventDefault();
+      onPlay?.(movie);
     }
   };
 
@@ -77,6 +78,7 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
               className={styles.card}
               onContextMenu={(e) => handleContextMenu(e, movie)}
               onKeyDown={(e) => handleKeyDown(e, movie)}
+              onClick={() => onPlay?.(movie)}
               role="listitem"
               tabIndex={0}
               aria-label={`${movie.title}, calificación ${movie.voteAverage}`}
