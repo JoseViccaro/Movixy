@@ -4,6 +4,7 @@ import styles from './MediaModal.module.css';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
 import type { Media } from '@/domain/models/media.model';
+import { useDpadNavigation } from '@/presentation/hooks/useDpadNavigation';
 
 interface MediaModalProps {
   media: Media;
@@ -17,11 +18,16 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isFavoriteLoading, setIsFavoriteLoading] = useState(false);
   const year = media.releaseDate?.split('-')[0] || 'N/A';
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // D-pad navigation for the modal
+  useDpadNavigation({
+    enabled: true,
+    containerSelector: `.${styles.modal}`,
+    onBack: onClose,
+  });
 
   useEffect(() => {
-    closeButtonRef.current?.focus();
-    
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
@@ -97,15 +103,16 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
       aria-labelledby="modal-title"
     >
       <div 
+        ref={modalRef}
         className={styles.modal} 
         onClick={(e) => e.stopPropagation()}
         role="document"
       >
         <button 
-          ref={closeButtonRef}
           className={styles.closeButton} 
           onClick={onClose}
           aria-label="Cerrar modal"
+          data-focusable="true"
         >
           <X size={24} />
         </button>
@@ -127,6 +134,7 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
               className={styles.playButton} 
               onClick={() => onPlay(media)}
               aria-label={`Reproducir ${media.title}`}
+              data-focusable="true"
             >
               <Play fill="black" size={24} />
               <span>Reproducir</span>
@@ -138,6 +146,7 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
               disabled={isFavoriteLoading}
               aria-label={isFavorite ? 'Quitar de mi lista' : 'Agregar a mi lista'}
               aria-pressed={isFavorite}
+              data-focusable="true"
             >
               {isFavorite ? <Check size={20} /> : <Plus size={20} />}
             </button>
@@ -165,6 +174,7 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
                       onClick={() => onPlay(episode)}
                       role="listitem"
                       tabIndex={0}
+                      data-focusable="true"
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           onPlay(episode);

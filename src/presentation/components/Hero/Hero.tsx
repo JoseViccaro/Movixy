@@ -27,11 +27,11 @@ export const Hero = ({ movie, onPlay, onMoreInfo }: HeroProps) => {
         </p>
         
         <div className={styles.buttons}>
-          <button className={styles.playButton} onClick={onPlay}>
+          <button className={styles.playButton} onClick={onPlay} data-focusable="true">
             <Play fill="black" size={20} />
             <span>Play</span>
           </button>
-          <button className={styles.infoButton} onClick={onMoreInfo}>
+          <button className={styles.infoButton} onClick={onMoreInfo} data-focusable="true">
             <Info size={20} />
             <span>More Info</span>
           </button>

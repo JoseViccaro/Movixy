@@ -1,142 +1,434 @@
+/* VideoPlayer — Premium Custom Player */
 
 .overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.95);
+  inset: 0;
   z-index: 1000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.container {
-  width: 90%;
-  max-width: 1200px;
-  background-color: #141414;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-}
-
-.header {
-  padding: 15px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #181818;
-}
-
-.headerActions {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.title {
-  color: white;
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 500;
-}
-
-.subtitlesMenuContainer {
-  position: relative;
-}
-
-.subtitlesButton {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.subtitlesButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-color: white;
-}
-
-.subtitlesMenu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 5px;
-  background-color: #232323;
-  border-radius: 4px;
-  overflow: hidden;
-  min-width: 150px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
-}
-
-.subtitleOption {
-  display: block;
-  width: 100%;
-  padding: 10px 15px;
-  background: none;
-  border: none;
-  color: #a3a3a3;
-  text-align: left;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: all 0.2s;
-}
-
-.subtitleOption:hover {
-  background-color: #333;
-  color: white;
-}
-
-.subtitleOption.active {
-  background-color: #464646;
-  color: white;
-}
-
-.closeButton {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 50%;
-  transition: background-color 0.2s;
+  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: none;
 }
 
-.closeButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.controlButton {
-  background: none;
-  border: none;
-  color: white;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.controlButton:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.overlay:hover {
+  cursor: default;
 }
 
 .video {
   width: 100%;
-  aspect-ratio: 16 / 9;
+  height: 100%;
+  object-fit: contain;
   outline: none;
   background-color: black;
+}
+
+/* Controls overlay */
+.controlsOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.7) 0%,
+    transparent 20%,
+    transparent 75%,
+    rgba(0, 0, 0, 0.85) 100%
+  );
+}
+
+.controlsOverlay.visible {
+  opacity: 1;
+  pointer-events: all;
+  cursor: default;
+}
+
+/* Top bar */
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px 16px;
+}
+
+.backButton {
+  color: white;
+  padding: 8px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.title {
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Center play indicator */
+.centerPlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: fadeInScale 0.3s ease-out;
+}
+
+.playIcon {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Bottom bar */
+.bottomBar {
+  padding: 0 32px 24px;
+}
+
+/* Progress bar */
+.progressContainer {
+  position: relative;
+  width: 100%;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: height 0.2s;
+}
+
+.progressContainer:hover {
+  height: 8px;
+}
+
+.progressBuffered {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.progressBar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: #e50914;
+  border-radius: 3px;
+  z-index: 1;
+}
+
+.progressThumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 16px;
+  height: 16px;
+  background: #e50914;
+  border-radius: 50%;
+  z-index: 2;
+  transition: transform 0.2s;
+  box-shadow: 0 0 8px rgba(229, 9, 20, 0.6);
+}
+
+.progressContainer:hover .progressThumb {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* Controls row */
+.controlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.controlsLeft,
+.controlsRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.controlBtn {
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.controlBtn.active {
+  color: #e50914;
+}
+
+.timeDisplay {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Track menus (subtitles & audio) */
+.menuContainer {
+  position: relative;
+}
+
+.trackMenu {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 12px;
+  background: rgba(20, 20, 20, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 8px;
+  overflow: hidden;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: menuFadeIn 0.2s ease-out;
+}
+
+@keyframes menuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.trackMenuTitle {
+  padding: 12px 16px 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.trackOption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 16px;
+  color: #a3a3a3;
+  text-align: left;
+  font-size: 0.95rem;
+  transition: all 0.15s;
+}
+
+.trackOption:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+.trackOption.active {
+  background: rgba(229, 9, 20, 0.2);
+  color: white;
+}
+
+.trackOption.active::before {
+  content: '✓';
+  margin-right: 8px;
+  color: #e50914;
+  font-weight: bold;
+}
+
+.settingsLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  color: #e50914;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  transition: background 0.2s;
+}
+
+.settingsLink:hover {
+  background: rgba(229, 9, 20, 0.1);
+}
+
+.backToMenu {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  transition: color 0.2s;
+}
+
+.backToMenu:hover {
+  color: white;
+}
+
+.settingSection {
+  padding: 12px 16px;
+}
+
+.settingLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  letter-spacing: 0.05em;
+}
+
+.settingOptions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settingOption {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.settingOption:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.settingOption.active {
+  background: #e50914;
+  border-color: #e50914;
+  color: white;
+}
+
+.colorCircle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================
+   DYNAMIC SUBTITLE STYLING (::cue)
+   ======================================== */
+
+.video::cue {
+  background-color: transparent;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Size */
+[data-sub-size="small"] .video::cue { font-size: 0.75em; }
+[data-sub-size="normal"] .video::cue { font-size: 1em; }
+[data-sub-size="large"] .video::cue { font-size: 1.5em; }
+
+/* Color */
+[data-sub-color="white"] .video::cue { color: #ffffff; }
+[data-sub-color="yellow"] .video::cue { color: #f5f500; }
+[data-sub-color="cyan"] .video::cue { color: #00ffff; }
+
+/* Background */
+[data-sub-bg="none"] .video::cue { background-color: transparent; text-shadow: none; }
+[data-sub-bg="shadow"] .video::cue { background-color: rgba(0, 0, 0, 0.5); text-shadow: 0 0 4px #000; }
+[data-sub-bg="solid"] .video::cue { background-color: #000000; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .topBar {
+    padding: 16px 16px 8px;
+  }
+
+  .bottomBar {
+    padding: 0 16px 16px;
+  }
+
+  .title {
+    font-size: 1rem;
+  }
+
+  .playIcon {
+    width: 60px;
+    height: 60px;
+    font-size: 2rem;
+  }
+}
+
+/* TV-specific (no hover device) */
+@media (hover: none) {
+  .progressContainer {
+    height: 8px;
+  }
+
+  .progressThumb {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  .controlBtn {
+    padding: 12px;
+    font-size: 1.5rem;
+  }
+
+  .controlsLeft,
+  .controlsRight {
+    gap: 16px;
+  }
 }

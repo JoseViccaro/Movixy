@@ -2,9 +2,11 @@
   --background: #000000;
   --surface: #141414;
   --primary: #e50914;
+  --primary-hover: #f40612;
   --text-primary: #ffffff;
   --text-secondary: #b3b3b3;
   --transition: all 0.3s ease;
+  --focus-ring: 0 0 0 3px rgba(229, 9, 20, 0.6);
 }
 
 @keyframes slideIn {
@@ -18,10 +20,30 @@
   }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -30,6 +52,7 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 a {
@@ -42,4 +65,70 @@ button {
   border: none;
   outline: none;
   background: none;
+}
+
+/* ========================================
+   D-PAD / TV REMOTE FOCUS STYLES
+   Elements with data-focusable="true" get
+   a visible focus ring when navigated to
+   via arrow keys or TV remote.
+   ======================================== */
+
+[data-focusable="true"] {
+  outline: none;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, outline 0.2s ease;
+}
+
+/* Focus ring when navigated by D-pad */
+[data-focused="true"],
+.dpad-focused {
+  box-shadow: var(--focus-ring) !important;
+  outline: 2px solid var(--primary) !important;
+  outline-offset: 3px;
+  transform: scale(1.03);
+  z-index: 50;
+  position: relative;
+}
+
+/* Subtler focus for buttons/links */
+button[data-focused="true"],
+a[data-focused="true"],
+button.dpad-focused,
+a.dpad-focused {
+  outline-offset: 2px;
+  transform: scale(1.05);
+}
+
+/* Card-specific focus (movie cards) */
+[data-focusable="true"][data-card="true"][data-focused="true"],
+[data-focusable="true"][data-card="true"].dpad-focused {
+  outline: 3px solid var(--primary);
+  outline-offset: 4px;
+  transform: scale(1.08);
+  z-index: 100;
+}
+
+/* TV-mode page transitions */
+.page-enter {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Hide scrollbar on TV (cleaner look) */
+@media (hover: none) and (pointer: coarse) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Fullscreen TV mode adjustments */
+:fullscreen {
+  background-color: var(--background);
+}
+
+:fullscreen .app-layout {
+  min-height: 100vh;
 }

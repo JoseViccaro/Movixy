@@ -1,4 +1,6 @@
 import { Component, type ReactNode } from 'react';
+import { AlertCircle, RefreshCw, Home } from 'lucide-react';
+import styles from './ErrorBoundary.module.css';
 
 interface Props {
   children: ReactNode;
@@ -10,6 +12,10 @@ interface State {
   error?: Error;
 }
 
+/**
+ * ErrorBoundary — Premium full-screen error handler for TV.
+ * Designed to feel like a native OS crash recovery screen.
+ */
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -35,54 +41,41 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div style={{
-          backgroundColor: '#141414',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'white',
-          padding: '20px',
-          textAlign: 'center',
-        }}>
-          <h1 style={{ marginBottom: '20px', fontSize: '2rem' }}>
-            Algo salió mal
-          </h1>
-          <p style={{ color: '#a3a3a3', marginBottom: '30px', maxWidth: '500px' }}>
-            {this.state.error?.message || 'Ha ocurrido un error inesperado. Por favor intenta de nuevo.'}
-          </p>
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <button
-              onClick={this.handleRetry}
-              style={{
-                padding: '12px 30px',
-                backgroundColor: '#e50914',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
-            >
-              Reintentar
-            </button>
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                padding: '12px 30px',
-                backgroundColor: 'transparent',
-                color: 'white',
-                border: '2px solid white',
-                borderRadius: '4px',
-                fontSize: '1rem',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-              }}
-            >
-              Recargar página
-            </button>
+        <div className={styles.overlay} role="alert">
+          <div className={styles.container}>
+            <div className={styles.iconWrapper}>
+              <AlertCircle size={64} className={styles.icon} />
+            </div>
+            
+            <h1 className={styles.title}>Vaya, algo no ha ido bien</h1>
+            <p className={styles.message}>
+              {this.state.error?.message || 'Ha ocurrido un error inesperado al intentar cargar este contenido.'}
+            </p>
+            
+            <div className={styles.actions}>
+              <button
+                onClick={this.handleRetry}
+                className={styles.primaryBtn}
+                data-focusable="true"
+                autoFocus
+              >
+                <RefreshCw size={20} />
+                <span>Reintentar ahora</span>
+              </button>
+              
+              <button
+                onClick={() => window.location.href = '/'}
+                className={styles.secondaryBtn}
+                data-focusable="true"
+              >
+                <Home size={20} />
+                <span>Volver al Inicio</span>
+              </button>
+            </div>
+
+            <p className={styles.footer}>
+              Si el problema persiste, comprueba tu conexión local o el servidor Jellyfin.
+            </p>
           </div>
         </div>
       );

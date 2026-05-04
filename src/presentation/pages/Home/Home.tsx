@@ -1,8 +1,10 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
-import { Navbar } from '@/presentation/components/Navbar/Navbar';
+import { useEffect, useState, lazy, Suspense, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Hero } from '@/presentation/components/Hero/Hero';
 import { MovieRow } from '@/presentation/components/MovieRow/MovieRow';
 import { Skeleton } from '@/presentation/components/Skeleton/Skeleton';
+import { Navbar } from '@/presentation/components/Navbar/Navbar';
+import { useDpadNavigation } from '@/presentation/hooks/useDpadNavigation';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
 import type { Media } from '@/domain/models/media.model';
@@ -10,7 +12,22 @@ import type { Media } from '@/domain/models/media.model';
 const VideoPlayer = lazy(() => import('@/presentation/components/VideoPlayer/VideoPlayer').then(m => ({ default: m.VideoPlayer })));
 const MediaModal = lazy(() => import('@/presentation/components/MediaModal/MediaModal').then(m => ({ default: m.MediaModal })));
 
+/**
+ * Route-to-section mapping for content filtering.
+ */
+const ROUTE_SECTION_MAP: Record<string, string> = {
+  '/': 'inicio',
+  '/movies': 'movies',
+  '/series': 'series',
+  '/new': 'novedades',
+  '/mylist': 'mylist',
+};
+
 export const Home = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const currentSection = ROUTE_SECTION_MAP[location.pathname] || 'inicio';
+
   const [popular, setPopular] = useState<Media[]>([]);
   const [moviesList, setMoviesList] = useState<Media[]>([]);
   const [seriesList, setSeriesList] = useState<Media[]>([]);
@@ -21,26 +38,33 @@ export const Home = () => {
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [playingMedia, setPlayingMedia] = useState<Media | null>(null);
   const [playingUrl, setPlayingUrl] = useState<string | null>(null);
-  const [currentSection, setCurrentSection] = useState('inicio');
 
-  const handleNavigate = (section: string) => {
-    setCurrentSection(section);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  // D-pad navigation — disabled when modal or player is open
+  const dpadEnabled = !selectedMedia && !playingMedia;
+  useDpadNavigation({
+    enabled: dpadEnabled,
+    onBack: () => {
+      if (selectedMedia) {
+        setSelectedMedia(null);
+      } else if (location.pathname !== '/') {
+        navigate('/');
+      }
+    },
+  });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const client = new JellyfinApiClient();
         const userId = localStorage.getItem('movixy_user_id');
-        
+
         if (!userId) {
-          window.location.reload();
+          navigate('/login', { replace: true });
           return;
         }
 
         const repository = new JellyfinMediaRepository(client, userId);
-        
+
         const [popularData, moviesData, seriesData, continueData, favoritesData] = await Promise.all([
           repository.getPopular(),
           repository.getMovies(),
@@ -62,28 +86,27 @@ export const Home = () => {
     };
 
     fetchData();
-  }, []);
+  }, [navigate]);
 
   const handlePlay = async (media: Media) => {
     setIsLoading(true);
-    setSelectedMedia(null); // Close modal when starting playback
+    setSelectedMedia(null);
     try {
       const client = new JellyfinApiClient();
       const userId = localStorage.getItem('movixy_user_id')!;
       const repository = new JellyfinMediaRepository(client, userId);
-      
+
       let playableId = media.id;
-      
+
       if (media.mediaType === 'tv') {
         const episodeId = await repository.getFirstEpisodeId(media.id);
         if (episodeId) {
           playableId = episodeId;
         } else {
-          // If no episodes found, we can't play it
           throw new Error('No se encontraron episodios para esta serie.');
         }
       }
-      
+
       setPlayingUrl(client.getStreamUrl(playableId));
       setPlayingMedia(media);
     } catch (error) {
@@ -93,9 +116,9 @@ export const Home = () => {
     }
   };
 
-  const handleSelect = (media: Media) => {
+  const handleSelect = useCallback((media: Media) => {
     setSelectedMedia(media);
-  };
+  }, []);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -117,7 +140,7 @@ export const Home = () => {
   if (isLoading && !playingMedia && !selectedMedia) {
     return (
       <div style={{ backgroundColor: '#141414', minHeight: '100vh' }}>
-        <Navbar onNavigate={handleNavigate} currentSection={currentSection} />
+        <Navbar onSearch={handleSearch} />
         <Skeleton type="hero" />
         <div style={{ padding: '20px 4%', marginTop: '-100px', display: 'flex', gap: '15px', overflow: 'hidden' }}>
           {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} type="card" />)}
@@ -186,24 +209,24 @@ export const Home = () => {
 
   return (
     <div style={{ paddingBottom: '50px' }}>
-      <Navbar onSearch={handleSearch} onNavigate={handleNavigate} currentSection={currentSection} />
+      <Navbar onSearch={handleSearch} />
       {heroMovie && currentSection === 'inicio' && (
-        <Hero 
-          movie={heroMovie} 
-          onPlay={() => handlePlay(heroMovie)} 
+        <Hero
+          movie={heroMovie}
+          onPlay={() => handlePlay(heroMovie)}
           onMoreInfo={() => handleSelect(heroMovie)}
         />
       )}
-      
-      <div style={{ marginTop: heroMovie && currentSection === 'inicio' ? '-100px' : '20px', padding: '0 4%', zIndex: 10, position: 'relative' }}>
+
+      <div style={{ marginTop: heroMovie && currentSection === 'inicio' ? '-100px' : '80px', padding: '0 4%', zIndex: 10, position: 'relative' }}>
         {renderSections()}
       </div>
 
       {selectedMedia && (
         <Suspense fallback={<div style={{ backgroundColor: '#141414', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Cargando...</div>}>
-          <MediaModal 
-            media={selectedMedia} 
-            onClose={() => setSelectedMedia(null)} 
+          <MediaModal
+            media={selectedMedia}
+            onClose={() => setSelectedMedia(null)}
             onPlay={handlePlay}
           />
         </Suspense>
@@ -211,7 +234,7 @@ export const Home = () => {
 
       {playingMedia && playingUrl && (
         <Suspense fallback={<div style={{ backgroundColor: '#141414', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>Cargando reproductor...</div>}>
-          <VideoPlayer 
+          <VideoPlayer
             key={playingUrl}
             title={playingMedia.title}
             streamUrl={playingUrl}

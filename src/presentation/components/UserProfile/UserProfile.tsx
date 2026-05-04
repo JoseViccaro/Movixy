@@ -3,6 +3,7 @@ import { User, ChevronDown, LogOut, RefreshCw, Settings, Users } from 'lucide-re
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { useToast } from '@/presentation/components/Toast/ToastContext';
 import styles from './UserProfile.module.css';
+import { useDpadNavigation } from '@/presentation/hooks/useDpadNavigation';
 
 interface UserProfileProps {
   userId: string;
@@ -16,10 +17,18 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
   const [showUserSwitch, setShowUserSwitch] = useState(false);
   const [users, setUsers] = useState<Array<{ id: string; name: string; hasPassword: boolean }>>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const { addToast } = useToast();
   const client = new JellyfinApiClient();
 
   const userAvatarUrl = avatarUrl || client.getUserImageUrl(userId);
+
+  // D-pad navigation for the dropdown menu
+  useDpadNavigation({
+    enabled: isOpen,
+    containerSelector: `.${styles.dropdown}`,
+    onBack: () => setIsOpen(false),
+  });
 
   const handleSwitchUser = (targetUserId: string, targetUsername: string) => {
     localStorage.setItem('movixy_user_id', targetUserId);
@@ -59,16 +68,15 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true"
+        data-focusable="true"
       >
         <div className={styles.avatar}>
-          {userId ? (
+          {userId && !imageError ? (
             <img 
               src={userAvatarUrl} 
               alt={`Avatar de ${username}`}
               className={styles.avatarImage}
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
+              onError={() => setImageError(true)}
             />
           ) : (
             <User size={20} />
@@ -82,14 +90,12 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
         <div className={styles.dropdown} role="menu">
           <div className={styles.dropdownHeader}>
             <div className={styles.avatarLarge}>
-              {userId ? (
+              {userId && !imageError ? (
                 <img 
                   src={userAvatarUrl} 
                   alt={`Avatar de ${username}`}
                   className={styles.avatarImageLarge}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
+                  onError={() => setImageError(true)}
                 />
               ) : (
                 <User size={32} />
@@ -109,6 +115,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
                 className={styles.menuItem}
                 onClick={handleShowUserSwitch}
                 role="menuitem"
+                data-focusable="true"
               >
                 <Users size={18} />
                 <span>Cambiar de usuario</span>
@@ -117,6 +124,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
                 className={styles.menuItem}
                 onClick={handleRefresh}
                 role="menuitem"
+                data-focusable="true"
               >
                 <RefreshCw size={18} />
                 <span>Escanear biblioteca</span>
@@ -124,6 +132,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
               <button 
                 className={styles.menuItem}
                 role="menuitem"
+                data-focusable="true"
               >
                 <Settings size={18} />
                 <span>Configuración</span>
@@ -133,6 +142,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
                 className={`${styles.menuItem} ${styles.logout}`}
                 onClick={onLogout}
                 role="menuitem"
+                data-focusable="true"
               >
                 <LogOut size={18} />
                 <span>Cerrar sesión</span>
@@ -144,6 +154,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
                 className={`${styles.menuItem} ${styles.backItem}`}
                 onClick={() => setShowUserSwitch(false)}
                 role="menuitem"
+                data-focusable="true"
               >
                 ← Volver
               </button>
@@ -158,6 +169,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
                       className={`${styles.userItem} ${user.id === userId ? styles.activeUser : ''}`}
                       onClick={() => handleSwitchUser(user.id, user.name)}
                       role="menuitem"
+                      data-focusable="true"
                     >
                       <div className={styles.userItemAvatar}>
                         <User size={18} />

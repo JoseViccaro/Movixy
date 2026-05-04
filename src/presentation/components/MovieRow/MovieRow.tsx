@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './MovieRow.module.css';
 import type { Media } from '@/domain/models/media.model';
@@ -19,6 +19,17 @@ export const MovieRow = ({ title, movies, onSelect }: MovieRowProps) => {
       rowRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    // Pre-fetch images for smoother scrolling
+    if (movies.length > 0) {
+      const preloadCount = 5;
+      movies.slice(0, preloadCount).forEach(movie => {
+        const img = new Image();
+        img.src = movie.posterPath;
+      });
+    }
+  }, [movies]);
 
   const handleKeyDown = (e: React.KeyboardEvent, movie: Media) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -47,6 +58,8 @@ export const MovieRow = ({ title, movies, onSelect }: MovieRowProps) => {
               onKeyDown={(e) => handleKeyDown(e, movie)}
               role="listitem"
               tabIndex={0}
+              data-focusable="true"
+              data-card="true"
               aria-label={`${movie.title}, calificación ${movie.voteAverage} estrellas`}
             >
               <img 
