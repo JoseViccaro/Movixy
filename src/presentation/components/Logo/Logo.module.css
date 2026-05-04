@@ -1,0 +1,71 @@
+.logoContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #e50914; /* Rojo Netflix/Movixy premium */
+  transition: transform 0.2s ease;
+}
+
+.logoWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoIcon {
+  height: 100%;
+  width: auto;
+  filter: drop-shadow(0 0 10px rgba(229, 9, 20, 0.3));
+}
+
+.logoText {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: white;
+  text-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+}
+
+.logoGlow {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(229, 9, 20, 0.4) 0%, transparent 70%);
+  filter: blur(8px);
+  z-index: -1;
+  opacity: 0.6;
+}
+
+/* ── Sizes ────────────────────────────────────────────────────────────────── */
+.small {
+  gap: 8px;
+}
+.small .logoWrapper {
+  height: 24px;
+}
+.small .logoText {
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+
+.medium {
+  gap: 12px;
+}
+.medium .logoWrapper {
+  height: 36px;
+}
+.medium .logoText {
+  font-size: 1.5rem;
+}
+
+.large {
+  gap: 16px;
+}
+.large .logoWrapper {
+  height: 60px;
+}
+.large .logoText {
+  font-size: 2.5rem;
+}

@@ -353,6 +353,11 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition 
         video.currentTime = startPosition;
       }
       video.play().catch(() => {});
+      
+      // Auto-fullscreen on start (Premium feature)
+      if (!isFullscreen && containerRef.current) {
+        toggleFullscreen(containerRef.current);
+      }
     };
 
     const onTimeUpdate = () => setCurrentTime(video.currentTime);

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Logo } from '@/presentation/components/Logo/Logo';
 import styles from './SplashScreen.module.css';
 
 interface SplashScreenProps {
@@ -33,13 +34,7 @@ export const SplashScreen = ({ onFinish = () => {}, duration = 2800 }: SplashScr
       <div className={styles.content}>
         <div className={styles.logoContainer}>
           <div className={styles.logoGlow} />
-          <svg className={styles.logoIcon} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="4" y="8" width="40" height="28" rx="3" stroke="currentColor" strokeWidth="2.5" fill="none" />
-            <path d="M20 16L32 22L20 28V16Z" fill="currentColor" />
-            <line x1="16" y1="40" x2="32" y2="40" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-            <line x1="24" y1="36" x2="24" y2="40" stroke="currentColor" strokeWidth="2.5" />
-          </svg>
-          <h1 className={styles.logoText}>MOVIXY</h1>
+          <Logo size="large" />
         </div>
 
         <p className={styles.tagline}>Your Private Cinema</p>

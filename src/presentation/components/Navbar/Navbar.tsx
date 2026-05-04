@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { UserProfile } from '@/presentation/components/UserProfile/UserProfile';
 import { QuickSearch } from './QuickSearch';
+import { Logo } from '@/presentation/components/Logo/Logo';
 import { secureStorage } from '@/core/utils/secure-storage';
 import styles from './Navbar.module.css';
 import type { Media } from '@/domain/models/media.model';
@@ -84,14 +85,14 @@ export const Navbar = ({ onSearch, onSelectMedia }: NavbarProps) => {
   return (
     <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`} role="navigation" aria-label="Navegación principal">
       <div className={styles.left}>
-        <h1
-          className={styles.logo}
+        <div
+          className={styles.logoWrapper}
           onClick={() => navigate('/')}
           data-focusable="true"
           tabIndex={0}
         >
-          MOVIXY
-        </h1>
+          <Logo size="small" />
+        </div>
         <ul className={styles.links}>
           {NAV_ITEMS.map((item) => (
             <li

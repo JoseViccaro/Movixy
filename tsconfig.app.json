@@ -6,12 +6,6 @@
     "module": "esnext",
     "types": ["vite/client"],
     "skipLibCheck": true,
-<<<<<<< HEAD
-||||||| eba5956
-    "ignoreDeprecations": "6.0",
-=======
-
->>>>>>> origin/windows-updates-tv-pro
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -26,13 +20,8 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-<<<<<<< HEAD
-    
-||||||| eba5956
-    "baseUrl": ".",
-=======
 
->>>>>>> origin/windows-updates-tv-pro
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@domain/*": ["./src/domain/*"],
