@@ -187,7 +187,8 @@ export class JellyfinApiClient {
 
   /** Obtener URL de imagen de usuario (avatar) */
   getUserImageUrl(userId: string): string {
-    return `${this.baseUrl}/Users/${userId}/Images/Primary?size=200&quality=90`;
+    const token = secureStorage.getToken() || jellyfinConfig.apiKey;
+    return `${this.baseUrl}/Users/${userId}/Images/Primary?size=200&quality=90&api_key=${token}`;
   }
 
   /** Obtener datos de usuario para un item (saber si es favorito) */
@@ -206,7 +207,8 @@ export class JellyfinApiClient {
 
   /** Obtener URL de la imagen de un item */
   getImageUrl(itemId: string, imageType: 'Primary' | 'Backdrop' = 'Primary', width = 400): string {
-    return `${this.baseUrl}/Items/${itemId}/Images/${imageType}?maxWidth=${width}&quality=90`;
+    const token = secureStorage.getToken() || jellyfinConfig.apiKey;
+    return `${this.baseUrl}/Items/${itemId}/Images/${imageType}?maxWidth=${width}&quality=90&api_key=${token}`;
   }
 
   /** Obtener URL de streaming de un item */

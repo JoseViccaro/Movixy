@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { UserProfile } from '@/presentation/components/UserProfile/UserProfile';
 import { QuickSearch } from './QuickSearch';
@@ -8,12 +9,20 @@ import type { Media } from '@/domain/models/media.model';
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
-  onNavigate?: (section: string) => void;
   onSelectMedia?: (media: Media) => void;
-  currentSection?: string;
 }
 
-export const Navbar = ({ onSearch, onNavigate, onSelectMedia, currentSection = 'inicio' }: NavbarProps) => {
+const NAV_ITEMS = [
+  { path: '/', label: 'Inicio', section: 'inicio' },
+  { path: '/series', label: 'Series', section: 'series' },
+  { path: '/movies', label: 'Películas', section: 'movies' },
+  { path: '/new', label: 'Novedades', section: 'novedades' },
+  { path: '/mylist', label: 'Mi lista', section: 'mylist' },
+] as const;
+
+export const Navbar = ({ onSearch, onSelectMedia }: NavbarProps) => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,41 +58,63 @@ export const Navbar = ({ onSearch, onNavigate, onSelectMedia, currentSection = '
     if (e.key === 'Escape') handleSearchClear();
   };
 
-  const handleNavClick = (section: string) => (e: React.MouseEvent) => {
+  const handleNavClick = (path: string) => (e: React.MouseEvent) => {
     e.preventDefault();
-    onNavigate?.(section);
+    navigate(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const getCurrentSection = (): string => {
+    const path = location.pathname;
+    const item = NAV_ITEMS.find(i => i.path === path);
+    return item?.section || 'inicio';
   };
 
   const getNavClass = (section: string) => {
-    return currentSection === section ? styles.active : '';
+    return getCurrentSection() === section ? styles.active : '';
   };
 
   const handleLogout = () => {
     secureStorage.clearToken();
     localStorage.removeItem('movixy_user_id');
     localStorage.removeItem('movixy_username');
-    window.location.reload();
+    navigate('/login', { replace: true });
   };
 
   return (
     <nav className={`${styles.navbar} ${isScrolled ? styles.scrolled : ''}`} role="navigation" aria-label="Navegación principal">
       <div className={styles.left}>
-        <h1 className={styles.logo} onClick={() => onNavigate?.('inicio')}>MOVIXY</h1>
+        <h1
+          className={styles.logo}
+          onClick={() => navigate('/')}
+          data-focusable="true"
+          tabIndex={0}
+        >
+          MOVIXY
+        </h1>
         <ul className={styles.links}>
-          <li className={getNavClass('inicio')} onClick={handleNavClick('inicio')}>Inicio</li>
-          <li className={getNavClass('series')} onClick={handleNavClick('series')}>Series</li>
-          <li className={getNavClass('movies')} onClick={handleNavClick('movies')}>Películas</li>
-          <li className={getNavClass('novedades')} onClick={handleNavClick('novedades')}>Novedades</li>
-          <li className={getNavClass('mylist')} onClick={handleNavClick('mylist')}>Mi lista</li>
+          {NAV_ITEMS.map((item) => (
+            <li
+              key={item.section}
+              className={getNavClass(item.section)}
+              onClick={handleNavClick(item.path)}
+              data-focusable="true"
+              tabIndex={0}
+            >
+              {item.label}
+            </li>
+          ))}
         </ul>
       </div>
       <div className={styles.right}>
         <div className={`${styles.searchContainer} ${isSearchActive ? styles.active : ''}`}>
-          <Search 
-            className={styles.icon} 
+          <Search
+            className={styles.icon}
             onClick={() => setIsSearchActive(!isSearchActive)}
             role="button"
             aria-label="Abrir búsqueda"
+            data-focusable="true"
+            tabIndex={0}
           />
           {isSearchActive && (
             <>
@@ -107,8 +138,7 @@ export const Navbar = ({ onSearch, onNavigate, onSelectMedia, currentSection = '
             </>
           )}
         </div>
-        <span>Niños</span>
-        <UserProfile 
+        <UserProfile
           userId={userId}
           username={username}
           onLogout={handleLogout}

@@ -5,6 +5,7 @@ import { useEpisodes } from '@/application/hooks/useMedia';
 import { useFavoriteToggle } from '@/application/hooks/useFavorites';
 import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
 import type { Media } from '@/domain/models/media.model';
+import { useDpadNavigation } from '@/presentation/hooks/useDpadNavigation';
 
 interface MediaModalProps {
   media: Media;
@@ -14,9 +15,16 @@ interface MediaModalProps {
 
 export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
   const userId = localStorage.getItem('movixy_user_id');
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  // ─── TanStack Query Hooks ───
+  // D-pad navigation for the modal (Windows addition)
+  useDpadNavigation({
+    enabled: true,
+    containerSelector: `.${styles.modal}`,
+    onBack: onClose,
+  });
+
+  // ─── TanStack Query Hooks (Mac logic) ───
   const { data: episodes, isLoading: isLoadingEpisodes } = useEpisodes(userId, media.id);
   const { mutate: toggleFavorite, isPending: isToggling } = useFavoriteToggle(userId);
 
@@ -24,8 +32,6 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
   const year = media.releaseDate?.split('-')[0] || 'N/A';
 
   useEffect(() => {
-    closeButtonRef.current?.focus();
-    
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -52,15 +58,16 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
       aria-labelledby="modal-title"
     >
       <div 
+        ref={modalRef}
         className={styles.modal} 
         onClick={(e) => e.stopPropagation()}
         role="document"
       >
         <button 
-          ref={closeButtonRef}
           className={styles.closeButton} 
           onClick={onClose}
           aria-label="Cerrar modal"
+          data-focusable="true"
         >
           <X size={24} />
         </button>
@@ -95,6 +102,8 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
             <button 
               className={styles.playButton} 
               onClick={() => onPlay(media)}
+              aria-label={`Reproducir ${media.title}`}
+              data-focusable="true"
             >
               <Play fill="black" size={24} />
               <span>Reproducir</span>
@@ -104,7 +113,9 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
               className={styles.actionButton} 
               onClick={handleToggleFavorite}
               disabled={isToggling}
-              title={isFavorite ? 'Quitar de mi lista' : 'Agregar a mi lista'}
+              aria-label={isFavorite ? 'Quitar de mi lista' : 'Agregar a mi lista'}
+              aria-pressed={isFavorite}
+              data-focusable="true"
             >
               {isFavorite ? <Check size={20} className={styles.activeIcon} /> : <Plus size={20} />}
             </button>
@@ -132,6 +143,12 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
                       onClick={() => onPlay(episode)}
                       role="button"
                       tabIndex={0}
+                      data-focusable="true"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          onPlay(episode);
+                        }
+                      }}
                     >
                       <span className={styles.episodeNumber}>{index + 1}</span>
                       <div className={styles.episodeThumbnailWrapper}>

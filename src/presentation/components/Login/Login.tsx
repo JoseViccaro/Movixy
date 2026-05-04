@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff, MonitorPlay } from 'lucide-react';
 import styles from './Login.module.css';
+import { useDpadNavigation } from '@/presentation/hooks/useDpadNavigation';
 
 interface LoginProps {
   onLogin: (serverUrl: string, username: string, password: string) => void;
@@ -17,6 +18,12 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
   });
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // D-pad navigation for the login form
+  useDpadNavigation({
+    enabled: true,
+    containerSelector: `.${styles.formWrapper}`,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,6 +51,7 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
               className={styles.input}
+              data-focusable="true"
             />
             <p className={styles.inputHint}>Usa tu IP local si estás en la tele (ej: 192.168.1.50)</p>
           </div>
@@ -58,6 +66,7 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
               onChange={(e) => setUsername(e.target.value)}
               className={styles.input}
               autoComplete="username"
+              data-focusable="true"
             />
           </div>
 
@@ -72,12 +81,14 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
                 onChange={(e) => setPassword(e.target.value)}
                 className={styles.input}
                 autoComplete="current-password"
+                data-focusable="true"
               />
               <button
                 type="button"
                 className={styles.eyeButton}
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
+                data-focusable="true"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -90,6 +101,7 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
             type="submit"
             className={styles.submitButton}
             disabled={isLoading || !username}
+            data-focusable="true"
           >
             {isLoading ? (
               <span className={styles.spinner}></span>

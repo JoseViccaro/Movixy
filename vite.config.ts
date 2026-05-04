@@ -11,12 +11,14 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'Movixy',
+        name: 'Movixy - Your Private Home Theater',
         short_name: 'Movixy',
-        description: 'Your Private Netflix',
+        description: 'Premium streaming experience for your local media library.',
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
+        orientation: 'landscape',
+        categories: ['entertainment', 'video'],
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -28,6 +30,20 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Peliculas',
+            short_name: 'Peliculas',
+            url: '/movies',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Series',
+            short_name: 'Series',
+            url: '/series',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }]
           }
         ]
       }

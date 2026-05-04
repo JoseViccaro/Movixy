@@ -1,0 +1,31 @@
+import { Suspense } from 'react';
+import { Outlet, Navigate } from 'react-router-dom';
+import { ErrorBoundary } from '@/presentation/components/ErrorBoundary/ErrorBoundary';
+import { OfflineIndicator } from '@/presentation/components/OfflineIndicator/OfflineIndicator';
+import { SplashScreen } from '@/presentation/components/SplashScreen/SplashScreen';
+import { secureStorage } from '@/core/utils/secure-storage';
+
+/**
+ * AppLayout — Shared layout for authenticated pages.
+ */
+export const AppLayout = () => {
+  const isAuth = secureStorage.isAuthenticated();
+  const userId = localStorage.getItem('movixy_user_id');
+
+  if (!isAuth || !userId) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return (
+    <ErrorBoundary>
+      <div className="app-layout">
+        <main>
+          <Suspense fallback={<SplashScreen />}>
+            <Outlet />
+          </Suspense>
+        </main>
+        <OfflineIndicator />
+      </div>
+    </ErrorBoundary>
+  );
+};

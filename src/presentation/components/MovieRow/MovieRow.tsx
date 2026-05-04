@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Play, Info, Plus, Check, Heart } from 'lucide-react';
 import { ContextMenu, type ContextMenuItem } from '@/presentation/components/ContextMenu/ContextMenu';
 import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
@@ -27,6 +27,17 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
       rowRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    // Pre-fetch images for smoother scrolling (Windows improvement)
+    if (movies.length > 0) {
+      const preloadCount = 5;
+      movies.slice(0, preloadCount).forEach(movie => {
+        const img = new Image();
+        img.src = movie.posterPath;
+      });
+    }
+  }, [movies]);
 
   const handleKeyDown = (e: React.KeyboardEvent, movie: Media) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -67,6 +78,7 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
           className={`${styles.sliderButton} ${styles.left}`}
           onClick={() => handleScroll('left')}
           aria-label={`Desplazar ${title} a la izquierda`}
+          data-focusable="true"
         >
           <ChevronLeft size={40} aria-hidden="true" />
         </button>
@@ -81,6 +93,8 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
               onClick={() => onPlay?.(movie)}
               role="listitem"
               tabIndex={0}
+              data-focusable="true"
+              data-card="true"
               aria-label={`${movie.title}, calificación ${movie.voteAverage}`}
             >
               {/* Poster Image */}
@@ -148,6 +162,7 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
           className={`${styles.sliderButton} ${styles.right}`}
           onClick={() => handleScroll('right')}
           aria-label={`Desplazar ${title} a la derecha`}
+          data-focusable="true"
         >
           <ChevronRight size={40} aria-hidden="true" />
         </button>
