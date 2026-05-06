@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X, Play, Plus, Check, Star } from 'lucide-react';
 import styles from './MediaModal.module.css';
-import { useEpisodes } from '@/application/hooks/useMedia';
+import { useEpisodes, useSeasons } from '@/application/hooks/useMedia';
 import { useFavoriteToggle } from '@/application/hooks/useFavorites';
 import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
 import type { Media } from '@/domain/models/media.model';
@@ -24,9 +24,24 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
     onBack: onClose,
   });
 
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string | undefined>(undefined);
+
+  console.log(`[MediaModal] Opening: ${media.title} (Type: ${media.mediaType}, ID: ${media.id})`);
+
   // ─── TanStack Query Hooks (Mac logic) ───
-  const { data: episodes, isLoading: isLoadingEpisodes } = useEpisodes(userId, media.id);
+  const { data: seasons } = useSeasons(userId, media.id);
+  const { data: episodes, isLoading: isLoadingEpisodes, error: episodesError } = useEpisodes(userId, media.id, selectedSeasonId);
   const { mutate: toggleFavorite, isPending: isToggling } = useFavoriteToggle(userId);
+
+  if (episodesError) console.error('[MediaModal] Error loading episodes:', episodesError);
+  if (episodes) console.log(`[MediaModal] Loaded ${episodes.length} episodes for season ${selectedSeasonId || 'all'}`);
+
+  // Auto-select first season when seasons are loaded
+  useEffect(() => {
+    if (seasons && seasons.length > 0 && !selectedSeasonId) {
+      setSelectedSeasonId(seasons[0].id);
+    }
+  }, [seasons, selectedSeasonId]);
 
   const isFavorite = media.isFavorite; // Ya viene normalizado por el repositorio
   const year = media.releaseDate?.split('-')[0] || 'N/A';
@@ -123,20 +138,36 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
 
           <p className={styles.overview}>{media.overview}</p>
 
-          {media.mediaType === 'tv' && (
+          {media.mediaType !== 'movie' && (
             <div className={styles.episodesSection}>
               <div className={styles.sectionHeader}>
                 <h2 className={styles.episodesTitle}>Episodios</h2>
-                {episodes && <span className={styles.count}>{episodes.length} episodios</span>}
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  {seasons && seasons.length > 0 && (
+                    <select 
+                      className={styles.seasonSelector}
+                      value={selectedSeasonId}
+                      onChange={(e) => setSelectedSeasonId(e.target.value)}
+                      data-focusable="true"
+                    >
+                      {seasons.map((season) => (
+                        <option key={season.id} value={season.id}>
+                          {season.title}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {episodes && episodes.length > 0 && <span className={styles.count}>{episodes.length} episodios</span>}
+                </div>
               </div>
 
               {isLoadingEpisodes ? (
                 <div className={styles.episodesSkeleton}>
                   {[1, 2, 3].map(i => <div key={i} className={styles.skeletonRow}></div>)}
                 </div>
-              ) : (
+              ) : episodes && episodes.length > 0 ? (
                 <div className={styles.episodesList}>
-                  {episodes?.map((episode, index) => (
+                  {episodes.map((episode, index) => (
                     <div 
                       key={episode.id} 
                       className={styles.episodeRow} 
@@ -171,6 +202,11 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
                       </div>
                     </div>
                   ))}
+                </div>
+              ) : (
+                <div style={{ padding: '40px', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+                  <p>No se encontraron episodios disponibles.</p>
+                  <p style={{ fontSize: '0.8rem', marginTop: '10px' }}>ID: {media.id}</p>
                 </div>
               )}
             </div>

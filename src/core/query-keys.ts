@@ -13,10 +13,16 @@ export const queryKeys = {
     movies: () => [...queryKeys.media.all, 'movies'] as const,
     series: () => [...queryKeys.media.all, 'series'] as const,
     byId: (id: string) => [...queryKeys.media.all, 'detail', id] as const,
-    episodes: (seriesId: string) => [...queryKeys.media.all, 'episodes', seriesId] as const,
+    seasons: (seriesId: string) => [...queryKeys.media.all, 'seasons', seriesId] as const,
+    episodes: (seriesId: string, seasonId?: string) => 
+      [...queryKeys.media.all, 'episodes', seriesId, seasonId] as const,
     filtered: (filters: Record<string, unknown>) =>
       [...queryKeys.media.all, 'filtered', filters] as const,
     search: (query: string) => [...queryKeys.media.all, 'search', query] as const,
+    // Infinite (paginated) variants
+    popularInfinite: () => [...queryKeys.media.all, 'popular', 'infinite'] as const,
+    moviesInfinite: () => [...queryKeys.media.all, 'movies', 'infinite'] as const,
+    seriesInfinite: () => [...queryKeys.media.all, 'series', 'infinite'] as const,
   },
   user: {
     all: ['user'] as const,

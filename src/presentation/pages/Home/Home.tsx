@@ -44,10 +44,13 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterOptions | null>(null);
   
-  const { data: popular = [], isLoading: popularLoading } = usePopular(userId);
-  const { data: moviesList = [], isLoading: moviesLoading } = useMovies(userId);
-  const { data: seriesList = [], isLoading: seriesLoading } = useSeries(userId);
-  const { data: continueWatching = [] } = useContinueWatching(userId);
+  // Only fetch if user is logged in
+  const shouldFetch = userId !== '';
+  
+  const { data: popular = [], isLoading: popularLoading } = usePopular(shouldFetch ? userId : '');
+  const { data: moviesList = [], isLoading: moviesLoading } = useMovies(shouldFetch ? userId : '');
+  const { data: seriesList = [], isLoading: seriesLoading } = useSeries(shouldFetch ? userId : '');
+  const { data: continueWatching = [] } = useContinueWatching(shouldFetch ? userId : '');
   const { data: favorites = [] } = useFavorites(userId);
   const { data: searchResults = [] } = useSearch(userId, searchQuery);
   const { data: filteredResults = [], isLoading: isFiltering } = useFiltered(userId, filters);

@@ -102,16 +102,27 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition 
   const { addToast } = useToast();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
 
+  const lastMousePos = useRef({ x: 0, y: 0 });
+
   // ── Auto-hide controls ────────────────────────────────────────────────────
-  const resetHideTimer = useCallback(() => {
+  const resetHideTimer = useCallback((e?: React.MouseEvent) => {
+    // If it's a mouse move, check if it actually moved (avoids ghost moves on TV)
+    if (e && e.type === 'mousemove') {
+      const deltaX = Math.abs(e.clientX - lastMousePos.current.x);
+      const deltaY = Math.abs(e.clientY - lastMousePos.current.y);
+      if (deltaX < 2 && deltaY < 2) return; // Ignore micro-movements
+      lastMousePos.current = { x: e.clientX, y: e.clientY };
+    }
+
     setShowControls(true);
     if (hideControlsTimer.current) clearTimeout(hideControlsTimer.current);
     hideControlsTimer.current = setTimeout(() => {
       const v = videoRef.current;
-      if (v && !v.paused && !showSubtitlesMenu && !showAudioMenu && !showSubtitleSettings && !showSpeedMenu) {
+      // We hide if playing, or if it's been idle enough even when paused
+      if (v && !showSubtitlesMenu && !showAudioMenu && !showSubtitleSettings && !showSpeedMenu) {
         setShowControls(false);
       }
-    }, 4000);
+    }, 3500); // Slightly faster hide (3.5s)
   }, [showSubtitlesMenu, showAudioMenu, showSubtitleSettings, showSpeedMenu]);
 
   // ── Seek indicator flash ──────────────────────────────────────────────────

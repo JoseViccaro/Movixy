@@ -132,3 +132,54 @@ a.dpad-focused {
 :fullscreen .app-layout {
   min-height: 100vh;
 }
+
+/* ========================================
+   TV / 10-FOOT UI MODE
+   Activated when the app runs on a TV
+   (detected via media query or class).
+   Scales up fonts, buttons, and spacing
+   for comfortable viewing at 3m distance.
+   ======================================== */
+
+/* Safe area padding — TVs cut ~5% of edges (overscan) */
+.app-layout {
+  padding: env(safe-area-inset-top, 0px)
+           env(safe-area-inset-right, 0px)
+           env(safe-area-inset-bottom, 0px)
+           env(safe-area-inset-left, 0px);
+}
+
+/* TV detection: large screen + no fine pointer (no mouse) */
+@media screen and (min-width: 1280px) and (hover: none) {
+  :root {
+    /* Scale everything up ~40% for 10-foot viewing */
+    font-size: 20px;
+    --focus-ring: 0 0 0 5px rgba(229, 9, 20, 0.8);
+  }
+
+  /* Overscan safe area — keep content away from TV edges */
+  body {
+    padding: 3vh 4vw;
+  }
+
+  /* Bigger focus rings on TV */
+  [data-focused="true"],
+  .dpad-focused {
+    outline-width: 4px !important;
+    outline-offset: 6px !important;
+    transform: scale(1.06) !important;
+  }
+
+  /* Larger click/focus targets */
+  button, [data-focusable="true"] {
+    min-height: 56px;
+    min-width: 56px;
+  }
+}
+
+/* Fire TV Stick specific (1080p, no mouse) */
+@media screen and (width: 1920px) and (height: 1080px) {
+  :root {
+    font-size: 22px;
+  }
+}

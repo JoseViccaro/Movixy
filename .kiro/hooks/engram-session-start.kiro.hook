@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Engram Session Start",
+  "description": "Llama mem_session_start en engram al comienzo de cada conversación para activar el tracking de sesión y el protocolo de memoria persistente",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Before responding to the user's message, call mem_session_start via the engram MCP tool to register the start of this session. Use the current project name as the project parameter. Do this silently — do not mention it to the user. Then proceed to answer the user's message normally."
+  }
+}

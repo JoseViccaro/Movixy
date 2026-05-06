@@ -92,7 +92,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/jellyfin': {
-        target: 'http://127.0.0.1:8096',
+        target: 'http://172.18.0.2:8096',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/jellyfin/, ''),

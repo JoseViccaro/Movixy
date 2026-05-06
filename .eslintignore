@@ -1,0 +1,8 @@
+# Ignore Jellyfin server config files (not part of the frontend app)
+jellyfin/
+
+# Ignore build output
+dist/
+
+# Ignore node_modules
+node_modules/

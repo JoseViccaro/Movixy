@@ -2,16 +2,16 @@ import { useEffect, useCallback, useRef } from 'react';
 
 /**
  * D-pad / TV Remote Navigation Hook
- * 
+ *
  * Manages spatial navigation for TV remotes and keyboard arrow keys.
  * Elements with `data-focusable="true"` become navigable.
  * The currently focused element gets the `[data-focused="true"]` attribute.
- * 
- * Key mappings (standard Android TV remote):
- * - ArrowUp/Down/Left/Right → spatial navigation
- * - Enter / Space → activate (click)
- * - Backspace / Escape → go back
- * - MediaPlayPause → play/pause toggle
+ *
+ * Key mappings:
+ * Standard keyboard:  ArrowUp/Down/Left/Right, Enter, Space, Escape, Backspace
+ * Fire TV remote:     same arrows + Enter, plus media keys below
+ * Android TV remote:  keyCode 179 (Play/Pause), 227 (Rewind), 228 (FastForward)
+ *                     keyCode 4 / key "GoBack" (Back button)
  */
 
 interface UseDpadOptions {
@@ -19,6 +19,12 @@ interface UseDpadOptions {
   containerSelector?: string;
   /** Called when Back/Escape is pressed */
   onBack?: () => void;
+  /** Called when Play/Pause media key is pressed (Fire TV / Android TV) */
+  onPlayPause?: () => void;
+  /** Called when Rewind media key is pressed */
+  onRewind?: () => void;
+  /** Called when FastForward media key is pressed */
+  onFastForward?: () => void;
   /** Enable/disable the hook */
   enabled?: boolean;
   /** Selector for the initial element to focus */
@@ -96,6 +102,9 @@ export function useDpadNavigation(options: UseDpadOptions = {}) {
   const {
     containerSelector,
     onBack,
+    onPlayPause,
+    onRewind,
+    onFastForward,
     enabled = true,
     initialFocusSelector,
   } = options;
@@ -137,6 +146,10 @@ export function useDpadNavigation(options: UseDpadOptions = {}) {
         return;
       }
 
+      const isInput =
+        focusedRef.current instanceof HTMLInputElement ||
+        focusedRef.current instanceof HTMLTextAreaElement;
+
       const directionMap: Record<string, 'up' | 'down' | 'left' | 'right'> = {
         ArrowUp: 'up',
         ArrowDown: 'down',
@@ -147,6 +160,11 @@ export function useDpadNavigation(options: UseDpadOptions = {}) {
       const direction = directionMap[e.key];
 
       if (direction) {
+        // If it's an input and we're moving left/right, let the input handle cursor movement
+        if (isInput && (direction === 'left' || direction === 'right')) {
+          return;
+        }
+
         e.preventDefault();
         const next = findNearest(focusedRef.current, direction, container);
         if (next) setFocused(next);
@@ -155,19 +173,62 @@ export function useDpadNavigation(options: UseDpadOptions = {}) {
 
       // Enter / Space → click
       if (e.key === 'Enter' || e.key === ' ') {
+        // If it's an input, Space should type a space, and Enter should submit the form
+        if (isInput) return;
+
         e.preventDefault();
         focusedRef.current.click();
         return;
       }
 
       // Back button (TV remote sends Backspace, browser sends Escape)
-      if (e.key === 'Backspace' || e.key === 'Escape') {
+      // Fire TV "Back" button sends keyCode 4 or key "GoBack"
+      if (
+        e.key === 'Backspace' ||
+        e.key === 'Escape' ||
+        e.key === 'GoBack' ||
+        (e as KeyboardEvent & { keyCode: number }).keyCode === 4
+      ) {
+        // If it's an input, Backspace should delete characters
+        if (isInput && e.key === 'Backspace') return;
+
         e.preventDefault();
         onBack?.();
         return;
       }
+
+      // ── Fire TV / Android TV media keys ──────────────────────────────────
+      // keyCode 179 = MediaPlayPause, key = "MediaPlayPause"
+      if (
+        e.key === 'MediaPlayPause' ||
+        (e as KeyboardEvent & { keyCode: number }).keyCode === 179
+      ) {
+        e.preventDefault();
+        onPlayPause?.();
+        return;
+      }
+
+      // keyCode 227 = MediaRewind
+      if (
+        e.key === 'MediaRewind' ||
+        (e as KeyboardEvent & { keyCode: number }).keyCode === 227
+      ) {
+        e.preventDefault();
+        onRewind?.();
+        return;
+      }
+
+      // keyCode 228 = MediaFastForward
+      if (
+        e.key === 'MediaFastForward' ||
+        (e as KeyboardEvent & { keyCode: number }).keyCode === 228
+      ) {
+        e.preventDefault();
+        onFastForward?.();
+        return;
+      }
     },
-    [enabled, containerSelector, initialFocusSelector, onBack, setFocused]
+    [enabled, containerSelector, initialFocusSelector, onBack, onPlayPause, onRewind, onFastForward, setFocused]
   );
 
   useEffect(() => {

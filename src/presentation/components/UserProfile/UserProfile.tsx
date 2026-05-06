@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, ChevronDown, LogOut, RefreshCw, Settings, Users } from 'lucide-react';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { useToast } from '@/presentation/components/Toast/ToastContext';
@@ -18,10 +18,29 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
   const [users, setUsers] = useState<Array<{ id: string; name: string; hasPassword: boolean }>>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [hasImage, setHasImage] = useState<boolean | null>(null);
+  const [client, setClient] = useState<JellyfinApiClient | null>(null);
   const { addToast } = useToast();
-  const client = new JellyfinApiClient();
 
-  const userAvatarUrl = avatarUrl || client.getUserImageUrl(userId);
+  // Load client and check for user image
+  useEffect(() => {
+    const init = async () => {
+      const apiClient = await JellyfinApiClient.create();
+      setClient(apiClient);
+      
+      try {
+        const profile = await apiClient.getUserProfile(userId);
+        // Check if the user has a primary image tag
+        setHasImage(!!(profile as any).PrimaryImageTag);
+      } catch {
+        setHasImage(false);
+      }
+    };
+    
+    if (userId) init();
+  }, [userId]);
+
+  const userAvatarUrl = (userId && client) ? client.getUserImageUrl(userId) : avatarUrl;
 
   // D-pad navigation for the dropdown menu
   useDpadNavigation({
@@ -37,6 +56,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
   };
 
   const handleRefresh = async () => {
+    if (!client) return;
     setIsOpen(false);
     try {
       await client.refreshLibrary();
@@ -47,6 +67,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
   };
 
   const handleShowUserSwitch = async () => {
+    if (!client) return;
     setShowUserSwitch(true);
     if (users.length === 0 && !isLoadingUsers) {
       setIsLoadingUsers(true);
@@ -71,7 +92,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
         data-focusable="true"
       >
         <div className={styles.avatar}>
-          {userId && !imageError ? (
+          {userId && hasImage && !imageError ? (
             <img 
               src={userAvatarUrl} 
               alt={`Avatar de ${username}`}
@@ -90,7 +111,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
         <div className={styles.dropdown} role="menu">
           <div className={styles.dropdownHeader}>
             <div className={styles.avatarLarge}>
-              {userId && !imageError ? (
+              {userId && hasImage && !imageError ? (
                 <img 
                   src={userAvatarUrl} 
                   alt={`Avatar de ${username}`}

@@ -211,6 +211,24 @@
   font-size: 0.9rem;
 }
 
+.seasonSelector {
+  background: #2a2a2a;
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.seasonSelector:focus {
+  border-color: white;
+  background: #333;
+}
+
 .episodesList {
   display: flex;
   flex-direction: column;

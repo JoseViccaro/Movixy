@@ -8,5 +8,7 @@ services:
     volumes:
       - ./jellyfin/config:/config
       - ./jellyfin/cache:/cache
-      - ./media:/media
+      # Disco externo Movixy
+      - /Volumes/Movixy/movies:/media/movies:ro
+      - /Volumes/Movixy/Series:/media/series:ro
     restart: 'unless-stopped'

@@ -26,3 +26,8 @@ if (typeof window !== 'undefined') {
 if (typeof globalThis !== 'undefined') {
   Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
 }
+
+// Fix ReferenceError: self is not defined for Workbox/PWA tests
+if (typeof globalThis !== 'undefined' && !globalThis.self) {
+  (globalThis as any).self = globalThis;
+}

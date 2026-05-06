@@ -11,7 +11,7 @@ interface LoginProps {
 
 export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
   const [serverUrl, setServerUrl] = useState(() => {
-    return localStorage.getItem('movixy_server_url') || 'http://localhost:8096';
+    return localStorage.getItem('movixy_server_url') || '/jellyfin';
   });
   const [username, setUsername] = useState(() => {
     return localStorage.getItem('movixy_username') || '';

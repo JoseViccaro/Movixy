@@ -4,8 +4,9 @@ import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repo
 import { queryKeys } from '@/core/query-keys';
 import type { Media } from '@/domain/models/media.model';
 
-const createRepository = (userId: string) => {
-  const client = new JellyfinApiClient();
+// Async factory — same pattern as useMedia.ts
+const createRepository = async (userId: string) => {
+  const client = await JellyfinApiClient.create();
   return new JellyfinMediaRepository(client, userId);
 };
 
@@ -14,18 +15,15 @@ const createRepository = (userId: string) => {
 export const useContinueWatching = (userId: string | null) =>
   useQuery({
     queryKey: queryKeys.user.continueWatching(),
-    queryFn: () => createRepository(userId!).getContinueWatching(),
+    queryFn: async () => (await createRepository(userId!)).getContinueWatching(),
     enabled: !!userId,
-    // Más fresco que el resto: el progreso cambia con cada sesión de visionado
     staleTime: 1000 * 60 * 2,
   });
-
-// ─── Favoritos ───────────────────────────────────────────────────────────────
 
 export const useFavorites = (userId: string | null) =>
   useQuery({
     queryKey: queryKeys.user.favorites(),
-    queryFn: () => createRepository(userId!).getFavorites(),
+    queryFn: async () => (await createRepository(userId!)).getFavorites(),
     enabled: !!userId,
   });
 
@@ -42,8 +40,8 @@ export const useFavoriteToggle = (userId: string | null) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ mediaId, isFavorite }: { mediaId: string; isFavorite: boolean }) => {
-      const repo = createRepository(userId!);
+    mutationFn: async ({ mediaId, isFavorite }: { mediaId: string; isFavorite: boolean }) => {
+      const repo = await createRepository(userId!);
       return repo.toggleFavorite(mediaId, isFavorite);
     },
     onMutate: async ({ mediaId, isFavorite }) => {
