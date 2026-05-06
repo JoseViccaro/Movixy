@@ -286,3 +286,25 @@
     padding-bottom: 1.5rem;
   }
 }
+
+/* ── Focus styles for TV Remote Navigation ─────────────────── */
+.card:focus-visible,
+.card.dpad-focused {
+  outline: 3px solid #e50914;
+  outline-offset: 2px;
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+.sliderButton:focus-visible,
+.sliderButton.dpad-focused {
+  background: rgba(255, 255, 255, 0.3);
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+button.dpad-focused {
+  outline: 2px solid #e50914;
+  outline-offset: 2px;
+}
