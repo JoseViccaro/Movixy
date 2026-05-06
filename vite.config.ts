@@ -62,20 +62,20 @@ export default defineConfig({
     host: true,
     proxy: {
       '/jellyfin': {
-        target: 'http://localhost:8096',
+        target: 'http://127.0.0.1:8096',
         changeOrigin: true,
+        secure: false,
         rewrite: (path) => path.replace(/^\/jellyfin/, ''),
-        ws: true, // Habilitar websockets por si Jellyfin los usa
+        ws: true,
         configure: (proxy) => {
           proxy.on('error', (err) => {
             console.log('proxy error', err);
           });
           proxy.on('proxyReq', (_proxyReq, req) => {
-            // Aumentar el timeout para videos pesados
             req.setTimeout(30000);
           });
         },
-      }
+       }
     }
   }
 })

@@ -1,3 +1,31 @@
+export interface Season {
+  number: number;
+  name: string;
+  episodeCount: number;
+  posterPath: string;
+}
+
+export interface Episode {
+  number: number;
+  name: string;
+  overview: string;
+  runtime: number;
+  stillPath: string;
+}
+
+export interface Subtitle {
+  language: string;
+  url: string;
+  label: string;
+}
+
+export interface AudioTrack {
+  language: string;
+  url: string;
+  label: string;
+  isDefault: boolean;
+}
+
 export interface Media {
   id: string;
   title: string;
@@ -14,6 +42,11 @@ export interface Media {
   playbackPositionTicks?: number;
   runtimeTicks?: number;
   watchedPercentage?: number;
+  // Campos extendidos para TV Shows y reproducción premium
+  seasons?: Season[];
+  episodes?: Episode[];
+  subtitles?: Subtitle[];
+  audioTracks?: AudioTrack[];
 }
 
 export interface Movie extends Media {

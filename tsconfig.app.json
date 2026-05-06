@@ -19,10 +19,8 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true,
-
-    "baseUrl": ".",
-    "paths": {
+     "noFallthroughCasesInSwitch": true,
+     "paths": {
       "@/*": ["./src/*"],
       "@domain/*": ["./src/domain/*"],
       "@data/*": ["./src/data/*"],
@@ -30,5 +28,6 @@
       "@core/*": ["./src/core/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/test/**/*"]
 }
