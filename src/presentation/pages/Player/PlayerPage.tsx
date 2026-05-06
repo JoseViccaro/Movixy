@@ -10,7 +10,7 @@ import styles from './PlayerPage.module.css';
  * PlayerPage — Robust dedicated playback page.
  * Handles single movies and series with auto-play functionality.
  */
-const PlayerPage = () => {
+export default function PlayerPage() {
   const { mediaId } = useParams<{ mediaId: string }>();
   const navigate = useNavigate();
   
@@ -38,7 +38,7 @@ const PlayerPage = () => {
     setNextEpisode(null);
     
     try {
-      const client = new JellyfinApiClient();
+      const client = await JellyfinApiClient.create();
       setPlayableMedia(episode);
       setStreamUrl(client.getStreamUrl(episode.id));
     } catch (err) {
@@ -81,7 +81,7 @@ const PlayerPage = () => {
       setError(null);
 
       try {
-        const client = new JellyfinApiClient();
+        const client = await JellyfinApiClient.create();
         const userId = localStorage.getItem('movixy_user_id');
 
         if (!userId) {
@@ -95,7 +95,6 @@ const PlayerPage = () => {
         const mediaData = await repository.getById(mediaId);
 
         if (mediaData.mediaType === 'tv') {
-          // It's a series: load episodes and play the first one (or where it left off)
           const episodesList = await repository.getEpisodes(mediaId);
           setEpisodes(episodesList);
 
@@ -106,14 +105,9 @@ const PlayerPage = () => {
             throw new Error('Esta serie no tiene episodios disponibles.');
           }
         } else if (mediaData.mediaType === 'episode') {
-          // It's a specific episode (from resume or search)
           setPlayableMedia(mediaData);
           setStreamUrl(client.getStreamUrl(mediaId));
-          
-          // Optionally load sister episodes for queueing (needs seriesId in media model or separate call)
-          // For now, if played directly, no auto-play queue is built unless we fetch the parent.
         } else {
-          // It's a movie
           setPlayableMedia(mediaData);
           setStreamUrl(client.getStreamUrl(mediaId));
         }
@@ -189,6 +183,5 @@ const PlayerPage = () => {
       )}
     </div>
   );
-};
+}
 
-export default PlayerPage;

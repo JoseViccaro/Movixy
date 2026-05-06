@@ -32,7 +32,7 @@ const ROUTE_SECTION_MAP: Record<string, string> = {
   '/mylist': 'mylist',
 };
 
-export const Home = () => {
+export default function Home() {
   const location = useLocation();
   const navigate = useNavigate();
   const userId = localStorage.getItem('movixy_user_id') || '';
@@ -78,7 +78,7 @@ export const Home = () => {
     setIsPlayerLoading(true);
     setSelectedMedia(null);
     try {
-      const client = new JellyfinApiClient();
+      const client = await JellyfinApiClient.create();
       const repository = new JellyfinMediaRepository(client, userId);
 
       let playableId = media.id;
@@ -92,16 +92,24 @@ export const Home = () => {
         }
       }
 
-      // Resume logic (Mac improvement)
       const startPos = media.playbackPositionTicks
         ? media.playbackPositionTicks / 10_000_000
         : undefined;
 
       setStartPosition(startPos);
-      setPlayingUrl(client.getStreamUrl(playableId));
+      const url = client.getStreamUrl(playableId);
+      // Add a timestamp to avoid cache issues
+      const cleanUrl = `${url}${url.includes('?') ? '&' : '?'}_t=${Date.now()}`;
+      
+      console.log(`[Playback] Playing: ${media.title} (ID: ${playableId})`);
+      console.log(`[Playback] URL: ${cleanUrl}`);
+      
+      setPlayingUrl(cleanUrl);
       setPlayingMedia(media);
-    } catch (error) {
+     } catch (error: unknown) {
       console.error('Playback error:', error);
+      const message = error instanceof Error ? error.message : 'Error al intentar reproducir este contenido.';
+      alert(message);
     } finally {
       setIsPlayerLoading(false);
     }
