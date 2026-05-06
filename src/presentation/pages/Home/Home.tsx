@@ -32,7 +32,7 @@ const ROUTE_SECTION_MAP: Record<string, string> = {
   '/mylist': 'mylist',
 };
 
-export default function Home() {
+export function HomePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const userId = localStorage.getItem('movixy_user_id') || '';

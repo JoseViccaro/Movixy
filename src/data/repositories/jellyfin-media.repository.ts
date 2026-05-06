@@ -196,7 +196,7 @@ export class JellyfinMediaRepository implements IMediaRepository {
         : 0;
 
     let mediaType: 'movie' | 'tv' | 'episode' = 'movie';
-    if (item.Type === 'Series' || item.Type === 'Folder' || item.Type === 'BoxSet') {
+    if (item.Type === 'Series' || item.Type === 'Folder' || item.Type === 'BoxSet' || item.Type === 'Season') {
       mediaType = 'tv';
     } else if (item.Type === 'Episode') {
       mediaType = 'episode';
@@ -206,9 +206,12 @@ export class JellyfinMediaRepository implements IMediaRepository {
     const hasBackdrop = !!item.BackdropImageTags?.length;
 
     // Map season/episode numbers from Jellyfin's IndexNumber
-    const seasonNumber = item.Type === 'Season' || item.Type === 'Episode' 
+    const seasonNumber = item.Type === 'Season' 
       ? item.IndexNumber 
-      : undefined;
+      : item.Type === 'Episode' 
+        ? item.ParentIndexNumber ?? item.IndexNumber // Use ParentIndexNumber for episode's season if available
+        : undefined;
+        
     const episodeNumber = item.Type === 'Episode' 
       ? item.IndexNumber 
       : undefined;

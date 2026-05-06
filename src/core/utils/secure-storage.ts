@@ -123,7 +123,16 @@ export const secureStorage = {
 
   async getToken(): Promise<string | null> {
     const packed = localStorage.getItem(STORAGE_KEY);
-    if (!packed) return null;
+    if (!packed) {
+      // Check for legacy token on-demand if new storage is empty
+      const legacy = localStorage.getItem(LEGACY_KEY);
+      if (legacy) {
+        await migrateLegacyToken();
+        // Re-read after migration
+        return this.getToken();
+      }
+      return null;
+    }
     return decrypt(packed);
   },
 

@@ -1,6 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ToastProvider } from '@/presentation/components/Toast/ToastContext';
 import { HomePage } from '@/presentation/pages/Home/Home';
+import { useContinueWatching } from '@/application/hooks/useFavorites';
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } }
+});
+
+// Mock secondary components
+vi.mock('@/presentation/components/UserProfile/UserProfile', () => ({
+  UserProfile: () => <div data-testid="user-profile" />
+}));
+vi.mock('@/presentation/components/Navbar/Navbar', () => ({
+  Navbar: () => <nav data-testid="navbar" />
+}));
 
 // Mock hooks
 vi.mock('@/application/hooks/useMedia', () => ({
@@ -34,7 +50,15 @@ describe('Real Continue Watching (T10)', () => {
   });
 
   it('should show real continue watching row with progress', () => {
-    render(<HomePage />);
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <MemoryRouter>
+            <HomePage />
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>
+    );
     
     // Should show "Continuar viendo" section
     const section = screen.getByText('Continuar viendo');
@@ -42,7 +66,15 @@ describe('Real Continue Watching (T10)', () => {
   });
 
   it('should calculate correct progress percentage', () => {
-    render(<HomePage />);
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <MemoryRouter>
+            <HomePage />
+          </MemoryRouter>
+        </ToastProvider>
+      </QueryClientProvider>
+    );
     
     // Movie with 50% progress
     const progressBar = screen.queryByTestId('progress-1');
@@ -51,7 +83,6 @@ describe('Real Continue Watching (T10)', () => {
 
   it('should save playback position to localStorage and Jellyfin', () => {
     // When user stops watching, should save position
-    const { useContinueWatching } = require('@/application/hooks/useFavorites');
     expect(useContinueWatching).toHaveBeenCalled();
   });
 });

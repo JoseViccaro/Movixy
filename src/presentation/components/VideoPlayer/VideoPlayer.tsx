@@ -3,6 +3,7 @@ import {
   useRef,
   useState,
   useCallback,
+  useMemo,
 } from 'react';
 import {
   X,
@@ -22,6 +23,7 @@ import {
 import Hls from 'hls.js';
 import { useToast } from '@/presentation/components/Toast/ToastContext';
 import { useFullscreen } from '@/presentation/hooks/useFullscreen';
+import type { Media } from '@/domain/models/media.model';
 import styles from './VideoPlayer.module.css';
 
 interface VideoPlayerProps {
@@ -30,6 +32,7 @@ interface VideoPlayerProps {
   onEnded?: () => void;
   title: string;
   startPosition?: number;
+  media?: Partial<Media>;
 }
 
 interface SubtitleTrack {
@@ -61,7 +64,7 @@ const formatTime = (seconds: number): string => {
   return `${m}:${String(s).padStart(2, '0')}`;
 };
 
-export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition }: VideoPlayerProps) => {
+export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition, media }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -605,6 +608,7 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition 
                   }}
                   aria-label="Velocidad de reproducción"
                   data-focusable="true"
+                  data-testid="speed-selector"
                 >
                   <Settings size={18} />
                   <span>{playbackSpeed}x</span>
@@ -640,6 +644,7 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition 
                     }}
                     aria-label="Idioma de audio"
                     data-focusable="true"
+                    data-testid="audio-selector"
                   >
                     <Languages size={18} />
                   </button>
@@ -675,8 +680,10 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition 
                   }}
                   aria-label="Subtítulos"
                   data-focusable="true"
+                  data-testid="subtitle-selector"
+                  data-active={currentSubtitle >= 0 ? 'true' : 'false'}
                 >
-                  <Subtitles size={18} />
+                  <Subtitles size={18} data-testid="toggle-subtitles" />
                   <span>CC</span>
                   <ChevronDown size={16} />
                 </button>

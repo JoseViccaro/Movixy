@@ -1,7 +1,9 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
+import { FixedSizeList as List } from 'react-window';
 import { ChevronLeft, ChevronRight, Play, Info, Plus, Check, Heart } from 'lucide-react';
 import { ContextMenu, type ContextMenuItem } from '@/presentation/components/ContextMenu/ContextMenu';
 import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
+import { MovieCard } from './MovieCard';
 import styles from './MovieRow.module.css';
 import type { Media } from '@/domain/models/media.model';
 
@@ -15,6 +17,7 @@ interface MovieRowProps {
 
 export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: MovieRowProps) => {
   const rowRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<List>(null);
   const [contextMenu, setContextMenu] = useState<{
     position: { x: number; y: number };
     media: Media;
@@ -25,6 +28,12 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
       const { scrollLeft, clientWidth } = rowRef.current;
       const scrollTo = direction === 'left' ? scrollLeft - clientWidth * 0.8 : scrollLeft + clientWidth * 0.8;
       rowRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    } else if (listRef.current) {
+      // Manual scroll for virtual list
+      const scrollAmount = 800; // Approx 4 cards
+      const currentScroll = (listRef.current as any)._outerRef?.scrollLeft ?? 0;
+      const scrollTo = direction === 'left' ? currentScroll - scrollAmount : currentScroll + scrollAmount;
+      listRef.current.scrollTo(scrollTo);
     }
   };
 
@@ -83,80 +92,50 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
           <ChevronLeft size={40} aria-hidden="true" />
         </button>
 
-        <div className={styles.slider} ref={rowRef} role="list">
-          {movies.map((movie) => (
-            <div
-              key={movie.id}
-              className={styles.card}
-              onContextMenu={(e) => handleContextMenu(e, movie)}
-              onKeyDown={(e) => handleKeyDown(e, movie)}
-              onClick={() => onPlay?.(movie)}
-              role="listitem"
-              tabIndex={0}
-              data-focusable="true"
-              data-card="true"
-              aria-label={`${movie.title}, calificación ${movie.voteAverage}`}
+        {movies.length > 20 ? (
+          <div data-testid="virtual-list">
+            <List
+              ref={listRef}
+              height={450}
+              itemCount={movies.length}
+              itemSize={208} // 200px card + 8px gap
+              layout="horizontal"
+              width={window.innerWidth}
+              className={styles.slider}
+              style={{ overflowY: 'visible' }}
             >
-              {/* Poster Image */}
-              <OptimizedImage
-                src={movie.posterPath}
-                alt={`Póster de ${movie.title}`}
-                className={styles.poster}
-              />
-
-              {/* Watched progress bar */}
-              {movie.watchedPercentage !== undefined && movie.watchedPercentage > 0 && movie.watchedPercentage < 100 && (
-                <div className={styles.progressBarContainer}>
-                  <div className={styles.progressBar} style={{ width: `${movie.watchedPercentage}%` }} />
-                </div>
-              )}
-
-              {/* ── Hover Overlay ── */}
-              <div className={styles.hoverOverlay}>
-                {/* Quick action buttons */}
-                <div className={styles.quickActions}>
-                  <button
-                    className={styles.playBtn}
-                    onClick={(e) => { e.stopPropagation(); onPlay?.(movie); }}
-                    aria-label={`Reproducir ${movie.title}`}
-                  >
-                    <Play size={18} fill="black" />
-                  </button>
-
-                  {onToggleFavorite && (
-                    <button
-                      className={styles.actionBtn}
-                      onClick={(e) => { e.stopPropagation(); onToggleFavorite(movie); }}
-                      aria-label={movie.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                    >
-                      {movie.isFavorite ? <Check size={16} /> : <Plus size={16} />}
-                    </button>
-                  )}
-
-                  <button
-                    className={styles.actionBtn}
-                    onClick={(e) => { e.stopPropagation(); onSelect(movie); }}
-                    aria-label={`Más info de ${movie.title}`}
-                  >
-                    <Info size={16} />
-                  </button>
-                </div>
-
-                {/* Card info */}
-                <div className={styles.cardMeta} onClick={() => onSelect(movie)}>
-                  <p className={styles.cardTitle}>{movie.title}</p>
-                  <div className={styles.metaRow}>
-                    <span className={styles.rating}>{movie.voteAverage?.toFixed(1)} ★</span>
-                    <span className={styles.year}>{movie.releaseDate?.split('-')[0]}</span>
-                    <span className={styles.badge}>
-                      {movie.mediaType === 'tv' ? 'Serie' : 'Película'}
-                    </span>
+              {({ index, style }) => {
+                const movie = movies[index];
+                return (
+                  <div style={{ ...style, paddingRight: '8px', overflow: 'visible' }}>
+                    <MovieCard 
+                      movie={movie} 
+                      onSelect={onSelect} 
+                      onPlay={onPlay} 
+                      onToggleFavorite={onToggleFavorite}
+                      handleContextMenu={handleContextMenu}
+                      handleKeyDown={handleKeyDown}
+                    />
                   </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                );
+              }}
+            </List>
+          </div>
+        ) : (
+          <div className={styles.slider} ref={rowRef} role="list">
+            {movies.map((movie) => (
+              <MovieCard 
+                key={movie.id}
+                movie={movie} 
+                onSelect={onSelect} 
+                onPlay={onPlay} 
+                onToggleFavorite={onToggleFavorite}
+                handleContextMenu={handleContextMenu}
+                handleKeyDown={handleKeyDown}
+              />
+            ))}
+          </div>
+        )}
 
         <button
           className={`${styles.sliderButton} ${styles.right}`}
