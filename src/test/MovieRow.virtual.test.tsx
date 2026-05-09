@@ -3,6 +3,11 @@ import { render, screen } from '@testing-library/react';
 import { MovieRow } from '@/presentation/components/MovieRow/MovieRow';
 import type { Media } from '@/domain/models/media.model';
 
+// Mock BackdropContext
+vi.mock('@/presentation/components/ImmersiveBackdrop/BackdropContext', () => ({
+  useBackdrop: () => ({ setUrl: vi.fn() })
+}));
+
 // Mock data
 const mockMovies: Media[] = Array.from({ length: 100 }, (_, i) => ({
   id: `movie-${i}`,
@@ -13,6 +18,7 @@ const mockMovies: Media[] = Array.from({ length: 100 }, (_, i) => ({
   releaseDate: '2024',
   voteAverage: 8.5,
   mediaType: 'movie' as const,
+  isFavorite: false,
 }));
 
 describe('MovieRow Virtualization (T7)', () => {
@@ -44,6 +50,7 @@ describe('MovieRow Virtualization (T7)', () => {
     );
     
     // Should NOT render all 100 movie cards
+    // The MovieCard component should have data-testid="movie-card"
     const cards = screen.queryAllByTestId('movie-card');
     expect(cards.length).toBeLessThan(100);
     expect(cards.length).toBeGreaterThan(0);

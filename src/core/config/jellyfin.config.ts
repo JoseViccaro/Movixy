@@ -11,7 +11,7 @@ export const jellyfinConfig = {
     return (
       localStorage.getItem('movixy_server_url') ||
       import.meta.env.VITE_JELLYFIN_URL ||
-      'http://172.18.0.2:8096' // IP real del servidor Jellyfin
+      '/jellyfin' // Usa el proxy local por defecto
     );
   },
 

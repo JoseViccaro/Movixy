@@ -1,8 +1,7 @@
-import { useRef, useState, useEffect, useMemo } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { FixedSizeList as List } from 'react-window';
-import { ChevronLeft, ChevronRight, Play, Info, Plus, Check, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Info, Heart } from 'lucide-react';
 import { ContextMenu, type ContextMenuItem } from '@/presentation/components/ContextMenu/ContextMenu';
-import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
 import { MovieCard } from './MovieCard';
 import styles from './MovieRow.module.css';
 import type { Media } from '@/domain/models/media.model';
@@ -13,9 +12,10 @@ interface MovieRowProps {
   onSelect: (media: Media) => void;
   onPlay?: (media: Media) => void;
   onToggleFavorite?: (media: Media) => void;
+  onHover?: (media: Media) => void;
 }
 
-export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: MovieRowProps) => {
+export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite, onHover }: MovieRowProps) => {
   const rowRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<List>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -31,7 +31,7 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
     } else if (listRef.current) {
       // Manual scroll for virtual list
       const scrollAmount = 800; // Approx 4 cards
-      const currentScroll = (listRef.current as any)._outerRef?.scrollLeft ?? 0;
+      const currentScroll = (listRef.current as unknown as { _outerRef?: { scrollLeft: number } })._outerRef?.scrollLeft ?? 0;
       const scrollTo = direction === 'left' ? currentScroll - scrollAmount : currentScroll + scrollAmount;
       listRef.current.scrollTo(scrollTo);
     }
@@ -113,6 +113,7 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
                       onSelect={onSelect} 
                       onPlay={onPlay} 
                       onToggleFavorite={onToggleFavorite}
+                      onHover={onHover}
                       handleContextMenu={handleContextMenu}
                       handleKeyDown={handleKeyDown}
                     />
@@ -130,6 +131,7 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite }: 
                 onSelect={onSelect} 
                 onPlay={onPlay} 
                 onToggleFavorite={onToggleFavorite}
+                onHover={onHover}
                 handleContextMenu={handleContextMenu}
                 handleKeyDown={handleKeyDown}
               />

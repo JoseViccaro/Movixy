@@ -1,0 +1,51 @@
+.home {
+  padding-bottom: 50px;
+}
+
+.loadingContainer {
+  background-color: var(--surface);
+  min-height: 100vh;
+}
+
+.skeletonRow {
+  padding: 20px 4%;
+  margin-top: -100px;
+  display: flex;
+  gap: 15px;
+  overflow: hidden;
+}
+
+.filteringContainer {
+  color: var(--text-primary);
+  text-align: center;
+  padding: 50px;
+}
+
+.emptyState {
+  color: var(--text-primary);
+  text-align: center;
+  padding: 100px;
+}
+
+.contentWithHero {
+  margin-top: -100px;
+  padding: 0 4%;
+  z-index: 10;
+  position: relative;
+}
+
+.contentNoHero {
+  margin-top: 20px;
+  padding: 0 4%;
+  z-index: 10;
+  position: relative;
+}
+
+.modalFallback, .playerFallback {
+  background-color: var(--surface);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}

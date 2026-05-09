@@ -39,7 +39,10 @@ export const MediaModal = ({ media, onClose, onPlay }: MediaModalProps) => {
   // Auto-select first season when seasons are loaded
   useEffect(() => {
     if (seasons && seasons.length > 0 && !selectedSeasonId) {
-      setSelectedSeasonId(seasons[0].id);
+      const timer = setTimeout(() => {
+        setSelectedSeasonId(seasons[0].id);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [seasons, selectedSeasonId]);
 

@@ -12,6 +12,10 @@ import { secureStorage } from '@/core/utils/secure-storage';
  * until the token is resolved. This avoids a flash-redirect to /login
  * on every page load.
  */
+import { BackdropProvider } from '@/presentation/components/ImmersiveBackdrop/BackdropProvider';
+import { ImmersiveBackdrop } from '@/presentation/components/ImmersiveBackdrop/ImmersiveBackdrop';
+import { Navbar } from '@/presentation/components/Navbar/Navbar';
+
 export const AppLayout = () => {
   const [authState, setAuthState] = useState<'pending' | 'ok' | 'denied'>(
     'pending',
@@ -29,14 +33,18 @@ export const AppLayout = () => {
 
   return (
     <ErrorBoundary>
-      <div className="app-layout">
-        <main>
-          <Suspense fallback={<SplashScreen />}>
-            <Outlet />
-          </Suspense>
-        </main>
-        <OfflineIndicator />
-      </div>
+      <BackdropProvider>
+        <div className="app-layout">
+          <ImmersiveBackdrop />
+          <Navbar />
+          <main style={{ paddingTop: '70px', minHeight: '100vh' }}>
+            <Suspense fallback={<SplashScreen />}>
+              <Outlet />
+            </Suspense>
+          </main>
+          <OfflineIndicator />
+        </div>
+      </BackdropProvider>
     </ErrorBoundary>
   );
 };

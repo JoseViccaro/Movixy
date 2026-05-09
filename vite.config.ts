@@ -92,7 +92,7 @@ export default defineConfig({
     host: true,
     proxy: {
       '/jellyfin': {
-        target: 'http://172.18.0.2:8096',
+        target: 'http://127.0.0.1:8096',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/jellyfin/, ''),
@@ -102,7 +102,10 @@ export default defineConfig({
             console.log('proxy error', err);
           });
           proxy.on('proxyReq', (_proxyReq, req) => {
-            req.setTimeout(30000);
+            req.setTimeout(60000); // 60 segundos para transcodificación pesada
+          });
+          proxy.on('proxyRes', (_proxyRes, _req, res) => {
+            res.setHeader('Access-Control-Allow-Origin', '*');
           });
         },
        }

@@ -1,15 +1,32 @@
 import { Play, Info, Star } from 'lucide-react';
 import styles from './Hero.module.css';
 import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
+import { useBackdrop } from '@/presentation/components/ImmersiveBackdrop/BackdropContext';
+import { useEffect } from 'react';
 import type { Media } from '@/domain/models/media.model';
+
+import { MediaPlaybackService } from '@/application/services/media-playback.service';
 
 interface HeroProps {
   movie: Media | null;
+  userId: string;
   onPlay: () => void;
   onMoreInfo: () => void;
 }
 
-export const Hero = ({ movie, onPlay, onMoreInfo }: HeroProps) => {
+export const Hero = ({ movie, userId, onPlay, onMoreInfo }: HeroProps) => {
+  const { setUrl } = useBackdrop();
+
+  useEffect(() => {
+    if (movie?.backdropPath) {
+      setUrl(movie.backdropPath);
+    }
+    // Pre-resolve the hero movie for instant start
+    if (movie && userId) {
+      MediaPlaybackService.preResolve(movie, userId).catch(() => {});
+    }
+  }, [movie, userId, setUrl]);
+
   if (!movie) return <div className={styles.heroSkeleton}></div>;
 
   return (

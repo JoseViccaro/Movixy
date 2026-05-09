@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { path: '/series', label: 'Series', section: 'series' },
   { path: '/movies', label: 'Películas', section: 'movies' },
   { path: '/new', label: 'Novedades', section: 'novedades' },
-  { path: '/mylist', label: 'Mi lista', section: 'mylist' },
+  { path: '/favorites', label: 'Mi lista', section: 'mylist' },
 ] as const;
 
 export const Navbar = ({ onSearch, onSelectMedia }: NavbarProps) => {

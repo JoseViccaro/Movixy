@@ -1,7 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { MovieRow } from '@/presentation/components/MovieRow/MovieRow';
-import type { Media } from '@/domain/models/media.model';
+import '@testing-library/jest-dom';
+import { MovieRow } from '../presentation/components/MovieRow/MovieRow';
+import type { Media } from '../domain/models/media.model';
+
+vi.mock('@/presentation/components/Toast/ToastContext', () => ({
+  useToast: () => ({ addToast: vi.fn() }),
+}));
+
+vi.mock('@/presentation/components/ImmersiveBackdrop/BackdropContext', () => ({
+  useBackdrop: () => ({ setUrl: vi.fn() })
+}));
 
 const mockMovies: Media[] = [
   {
@@ -27,8 +36,12 @@ const mockMovies: Media[] = [
 ];
 
 vi.mock('lucide-react', () => ({
-  ChevronLeft: () => <button data-testid="chevron-left">←</button>,
-  ChevronRight: () => <button data-testid="chevron-right">→</button>,
+  ChevronLeft: () => <span data-testid="chevron-left">←</span>,
+  ChevronRight: () => <span data-testid="chevron-right">→</span>,
+  Play: () => <span data-testid="play">▶</span>,
+  Plus: () => <span data-testid="plus">+</span>,
+  Check: () => <span data-testid="check">✓</span>,
+  Info: () => <span data-testid="info">i</span>,
 }));
 
 describe('MovieRow', () => {
@@ -65,11 +78,10 @@ describe('MovieRow', () => {
     expect(screen.getByText('2024')).toBeInTheDocument();
   });
 
-  it('renders empty state when no movies', () => {
+  it('should not render when no movies', () => {
     const handleSelect = vi.fn();
-    render(<MovieRow title="Empty List" movies={[]} onSelect={handleSelect} />);
+    const { container } = render(<MovieRow title="Empty List" movies={[]} onSelect={handleSelect} />);
     
-    expect(screen.getByText('Empty List')).toBeInTheDocument();
-    expect(screen.queryByText('Test Movie 1')).not.toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 });

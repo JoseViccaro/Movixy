@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/presentation/layouts/AppLayout';
-import { HomePage, PlayerPage, LoginPage, MoviesPage, SeriesPage, SearchPage, FavoritesPage, DetailsPage } from './pages';
+import { HomePage, PlayerPage, LoginPage, MoviesPage, SeriesPage, SearchPage, FavoritesPage, DetailsPage, NewPage } from './pages';
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +30,10 @@ export const router = createBrowserRouter([
       {
         path: 'favorites',
         element: <FavoritesPage />,
+      },
+      {
+        path: 'new',
+        element: <NewPage />,
       },
       {
         path: 'details/:id',

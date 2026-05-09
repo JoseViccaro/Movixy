@@ -1,9 +1,17 @@
 .container {
   padding: 1rem 4%;
-  background: linear-gradient(180deg, rgba(20,20,20,0.9) 0%, rgba(20,20,20,0) 100%);
+  background: transparent;
   position: sticky;
-  top: 60px;
+  top: 70px;
   z-index: 90;
+  transition: all 0.3s ease;
+}
+
+.scrolled {
+  background: rgba(20, 20, 20, 0.5);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .header {

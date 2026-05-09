@@ -3,7 +3,6 @@ import {
   useRef,
   useState,
   useCallback,
-  useMemo,
 } from 'react';
 import {
   X,
@@ -86,9 +85,25 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
   });
 
   // Track & Settings States (Windows additions)
-  const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>([]);
-  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>([]);
-  const [currentSubtitle, setCurrentSubtitle] = useState<number>(-1);
+  const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>(() => {
+    if (!media?.subtitles) return [];
+    return media.subtitles.map((s, i) => ({
+      id: i,
+      name: s.label || s.language || `Track ${i + 1}`,
+      lang: s.language || 'unknown'
+    }));
+  });
+  const [audioTracks, setAudioTracks] = useState<AudioTrack[]>(() => {
+    if (!media?.audioTracks) return [];
+    return media.audioTracks.map((a, i) => ({
+      id: i,
+      name: a.label || a.language || `Audio ${i + 1}`,
+      lang: a.language || 'unknown'
+    }));
+  });
+  const [currentSubtitle, setCurrentSubtitle] = useState<number>(() => {
+    return (media?.subtitles && media.subtitles.length > 0) ? 0 : -1;
+  });
   const [currentAudio, setCurrentAudio] = useState<number>(0);
   const [showSubtitlesMenu, setShowSubtitlesMenu] = useState(false);
   const [showAudioMenu, setShowAudioMenu] = useState(false);
@@ -101,6 +116,8 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     color: 'white',
     background: 'shadow',
   });
+
+  const [error, setError] = useState<string | null>(null);
 
   const { addToast } = useToast();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
@@ -367,11 +384,6 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
         video.currentTime = startPosition;
       }
       video.play().catch(() => {});
-      
-      // Auto-fullscreen on start (Premium feature)
-      if (!isFullscreen && containerRef.current) {
-        toggleFullscreen(containerRef.current);
-      }
     };
 
     const onTimeUpdate = () => setCurrentTime(video.currentTime);
@@ -394,10 +406,13 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     } else if (Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: true,
-        maxBufferLength: 30,
-        maxMaxBufferLength: 600,
-        maxBufferSize: 60 * 1000 * 1000,
-        lowLatencyMode: false,
+        maxBufferLength: 10, // Menos buffer inicial para arrancar antes
+        maxMaxBufferLength: 30,
+        maxBufferSize: 30 * 1000 * 1000,
+        lowLatencyMode: true, // ¡Baja latencia activada!
+        backBufferLength: 30,
+        manifestLoadingMaxRetry: 3,
+        levelLoadingMaxRetry: 3,
       });
       hlsRef.current = hls;
 
@@ -419,7 +434,7 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
               }, 100);
               break;
             default:
-              addToast('error', 'Error crítico de reproducción.');
+              setError('Error crítico de reproducción. El servidor no responde o el formato no es compatible.');
               hls.destroy();
               break;
           }
@@ -507,10 +522,27 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
         </div>
       )}
 
-      {/* ── Buffering Spinner ────────────────────────────────────────────── */}
-      {isBuffering && (
+      {/* ── Buffering or Error Overlay ── */}
+      {(isBuffering || !streamUrl || error) && (
         <div className={styles.bufferingOverlay}>
-          <div className={styles.spinner} />
+          {error ? (
+            <div className={styles.errorContent}>
+              <X size={48} color="#e50914" />
+              <p className={styles.errorText}>{error}</p>
+              <button 
+                className={styles.retryBtn}
+                onClick={() => window.location.reload()}
+                data-focusable="true"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className={styles.spinner} />
+              {!streamUrl && <p className={styles.loadingText}>Iniciando reproducción...</p>}
+            </>
+          )}
         </div>
       )}
 

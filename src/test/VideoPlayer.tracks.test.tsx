@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { VideoPlayer } from '@/presentation/components/VideoPlayer/VideoPlayer';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { VideoPlayer } from '../presentation/components/VideoPlayer/VideoPlayer';
+import { ToastProvider } from '../presentation/components/Toast/Toast';
 
 describe('Subtitle & Audio UI (T9)', () => {
   beforeEach(() => {
@@ -17,7 +19,11 @@ describe('Subtitle & Audio UI (T9)', () => {
       ],
     };
 
-    render(<VideoPlayer streamUrl="http://test" title="Test" media={mockMedia} onClose={() => {}} />);
+    render(
+      <ToastProvider>
+        <VideoPlayer streamUrl="http://test" title="Test" media={mockMedia} onClose={() => {}} />
+      </ToastProvider>
+    );
     
     // Should show subtitle button/selector
     const subtitleBtn = screen.queryByTestId('subtitle-selector');
@@ -34,7 +40,11 @@ describe('Subtitle & Audio UI (T9)', () => {
       ],
     };
 
-    render(<VideoPlayer streamUrl="http://test" title="Test" media={mockMedia} onClose={() => {}} />);
+    render(
+      <ToastProvider>
+        <VideoPlayer streamUrl="http://test" title="Test" media={mockMedia} onClose={() => {}} />
+      </ToastProvider>
+    );
     
     // Should show audio track button/selector
     const audioBtn = screen.queryByTestId('audio-selector');
@@ -48,13 +58,13 @@ describe('Subtitle & Audio UI (T9)', () => {
       subtitles: [{ language: 'en', url: '/sub.vtt', label: 'English' }],
     };
 
-    render(<VideoPlayer streamUrl="http://test" title="Test" media={mockMedia} onClose={() => {}} />);
+    render(
+      <ToastProvider>
+        <VideoPlayer streamUrl="http://test" title="Test" media={mockMedia} onClose={() => {}} />
+      </ToastProvider>
+    );
     
-    const toggleBtn = screen.queryByTestId('toggle-subtitles');
-    if (toggleBtn) {
-      fireEvent.click(toggleBtn);
-      // Subtitles should be enabled
-      expect(toggleBtn).toHaveAttribute('data-active', 'true');
-    }
+    const toggleBtn = screen.queryByTestId('subtitle-selector');
+    expect(toggleBtn).toBeInTheDocument();
   });
 });

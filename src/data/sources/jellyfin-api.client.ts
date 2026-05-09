@@ -1,8 +1,6 @@
 import { jellyfinConfig } from '@/core/config/jellyfin.config';
 import { secureStorage } from '@/core/utils/secure-storage';
 
-const PLAY_SESSION_ID = `movixy-${Math.random().toString(36).substring(2, 11)}`;
-
 /**
  * JellyfinApiClient — Data Layer infrastructure.
  *
@@ -11,7 +9,8 @@ const PLAY_SESSION_ID = `movixy-${Math.random().toString(36).substring(2, 11)}`;
  * where the token is not yet needed (e.g. the authenticate() call itself).
  */
 export class JellyfinApiClient {
-  private baseUrl: string;
+  private static instance: JellyfinApiClient | null = null;
+  public baseUrl: string;
   private token: string;
   private maxRetries = 3;
   private retryDelay = 1000;
@@ -21,10 +20,13 @@ export class JellyfinApiClient {
     this.token = token;
   }
 
-  /** Preferred factory — resolves the stored token before returning the client. */
+  /** Preferred factory — returns a singleton client with the token loaded. */
   static async create(): Promise<JellyfinApiClient> {
+    if (this.instance) return this.instance;
+    
     const token = (await secureStorage.getToken()) ?? jellyfinConfig.apiKey;
-    return new JellyfinApiClient(token);
+    this.instance = new JellyfinApiClient(token);
+    return this.instance;
   }
 
   /** Update the in-memory token (called after a successful login). */
@@ -259,6 +261,53 @@ export class JellyfinApiClient {
     });
   }
 
+  async getPlaybackInfo(userId: string, itemId: string, options?: { MaxStaticBitrate?: number; MaxStreamingBitrate?: number; MusicStreamingTranscodingBitrate?: number }) {
+    const deviceProfile = {
+      MaxStaticBitrate: options?.MaxStaticBitrate || 20000000,
+      MaxStreamingBitrate: options?.MaxStreamingBitrate || 20000000,
+      MusicStreamingTranscodingBitrate: 192000,
+      DirectPlayProfiles: [
+        { Container: 'mp4,m4v', VideoCodec: 'h264,hevc,vp8,vp9,av1', AudioCodec: 'aac,mp3,opus,flac' },
+        { Container: 'mkv', VideoCodec: 'h264,hevc,vp8,vp9,av1', AudioCodec: 'aac,mp3,opus,flac' }
+      ],
+      TranscodingProfiles: [
+        {
+          Container: 'ts',
+          Type: 'Video',
+          VideoCodec: 'h264',
+          AudioCodec: 'aac',
+          Protocol: 'hls',
+          Context: 'Streaming',
+          BreakOnNonKeyFrames: true
+        }
+      ],
+      ContainerProfiles: [],
+      CodecProfiles: [
+        {
+          Type: 'Video',
+          Codec: 'h264',
+          Conditions: [
+            { Condition: 'LessThanEqual', Property: 'Width', Value: '1920', IsRequired: true },
+            { Condition: 'LessThanEqual', Property: 'Height', Value: '1080', IsRequired: true }
+          ]
+        }
+      ],
+      SubtitleProfiles: [
+        { Format: 'vtt', Method: 'External' },
+        { Format: 'srt', Method: 'External' }
+      ]
+    };
+
+    return this.request<JellyfinPlaybackInfoResponse>(
+      `/Items/${itemId}/PlaybackInfo?UserId=${userId}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ DeviceProfile: deviceProfile }),
+      }
+    );
+  }
+
   // --- Sync URL builders (token already in memory from constructor) ---
 
   getUserImageUrl(userId: string): string {
@@ -277,18 +326,15 @@ export class JellyfinApiClient {
 
   getStreamUrl(itemId: string): string {
     const t = this.token || jellyfinConfig.apiKey;
+    const uniqueSessionId = `movixy-${Math.random().toString(36).substring(2, 11)}`;
     const params = new URLSearchParams({
       api_key: t,
       MediaSourceId: itemId,
+      Static: 'true', // Permitir Direct Stream si el codec es compatible
       VideoCodec: 'h264',
-      AudioCodec: 'aac',
-      AudioSampleRate: '44100',
-      TranscodingMaxAudioChannels: '2',
-      MaxStreamingBitrate: '10000000',
-      RequireAvc: 'true',
-      RequireNonAnamorphic: 'true',
-      DeInterlace: 'true',
-      PlaySessionId: PLAY_SESSION_ID,
+      AudioCodec: 'aac,mp3', // Darle opciones al servidor
+      MaxStreamingBitrate: '8000000', // 8 Mbps - óptimo para arranque instantáneo en 1080p
+      PlaySessionId: uniqueSessionId,
     });
     const base =
       this.baseUrl === '/jellyfin' ? '/jellyfin' : this.baseUrl;
@@ -363,5 +409,32 @@ export interface JellyfinUser {
   HasPassword: boolean;
   HasConfiguredPassword: boolean;
   LastLoginDate?: string;
-  LastActivityDate?: string;
+}
+
+export interface JellyfinPlaybackInfoResponse {
+  MediaSources: JellyfinMediaSource[];
+  PlaySessionId: string;
+}
+
+export interface JellyfinMediaSource {
+  Id: string;
+  Path: string;
+  Protocol: string;
+  Container: string;
+  VideoType: string;
+  SupportsDirectPlay: boolean;
+  SupportsDirectStream: boolean;
+  SupportsTranscoding: boolean;
+  TranscodingUrl?: string;
+  TranscodingSubProtocol?: string;
+  MediaStreams: JellyfinMediaStream[];
+}
+
+export interface JellyfinMediaStream {
+  Codec: string;
+  Language: string;
+  DisplayTitle: string;
+  IsInterlaced: boolean;
+  Type: 'Audio' | 'Video' | 'Subtitle';
+  Index: number;
 }

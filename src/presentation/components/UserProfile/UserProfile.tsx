@@ -31,7 +31,7 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
       try {
         const profile = await apiClient.getUserProfile(userId);
         // Check if the user has a primary image tag
-        setHasImage(!!(profile as any).PrimaryImageTag);
+        setHasImage(!!(profile as unknown as { PrimaryImageTag?: string }).PrimaryImageTag);
       } catch {
         setHasImage(false);
       }

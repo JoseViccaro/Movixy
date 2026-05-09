@@ -1,0 +1,306 @@
+
+/Users/joseviccaro/Desktop/Movixy/src/application/services/media-playback.service.ts
+  128:14  error  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/components/ImmersiveBackdrop/BackdropContext.tsx
+  20:14  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/components/ImmersiveBackdrop/ImmersiveBackdrop.tsx
+  14:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/components/ImmersiveBackdrop/ImmersiveBackdrop.tsx:14:5
+  12 |     if (url === currentUrl) return;
+  13 |
+> 14 |     setIsChanging(true);
+     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     setPrevUrl(currentUrl);
+  16 |     
+  17 |     // Pequena demora para suavizar a transição  react-hooks/set-state-in-effect
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/components/MediaModal/MediaModal.tsx
+  42:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/components/MediaModal/MediaModal.tsx:42:7
+  40 |   useEffect(() => {
+  41 |     if (seasons && seasons.length > 0 && !selectedSeasonId) {
+> 42 |       setSelectedSeasonId(seasons[0].id);
+     |       ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  43 |     }
+  44 |   }, [seasons, selectedSeasonId]);
+  45 |  react-hooks/set-state-in-effect
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/components/MovieRow/MovieRow.tsx
+  34:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/components/UserProfile/UserProfile.tsx
+  34:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Favorites/FavoritesPage.tsx
+  36:23  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `timeout` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Favorites/FavoritesPage.tsx:36:23
+  34 |   };
+  35 |
+> 36 |   const handleHover = React.useMemo(() => {
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+> 37 |     let timeout: ReturnType<typeof setTimeout>;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 38 |     return (media: Media) => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |       clearTimeout(timeout);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |       timeout = setTimeout(() => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |       }, 300);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 43 |     };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 44 |   }, [userId]);
+     | ^^^^^^^^^^^^^^^ This function may (indirectly) reassign or modify `timeout` after render
+  45 |
+  46 |   const handleToggleFavorite = (media: Media) => {
+  47 |     toggleFavorite({ mediaId: media.id, isFavorite: !media.isFavorite });
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Favorites/FavoritesPage.tsx:40:7
+  38 |     return (media: Media) => {
+  39 |       clearTimeout(timeout);
+> 40 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ This modifies `timeout`
+  41 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  42 |       }, 300);
+  43 |     };  react-hooks/immutability
+  40:7   error  Error: Cannot reassign variable after render completes
+
+Reassigning `timeout` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Favorites/FavoritesPage.tsx:40:7
+  38 |     return (media: Media) => {
+  39 |       clearTimeout(timeout);
+> 40 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ Cannot reassign `timeout` after render completes
+  41 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  42 |       }, 300);
+  43 |     };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 react-hooks/immutability
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Home/Home.tsx
+  69:23  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `timeout` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Home/Home.tsx:69:23
+  67 |
+  68 |   // ── Pre-resolution (Hover) ──
+> 69 |   const handleHover = useMemo(() => {
+     |                       ^^^^^^^^^^^^^^^
+> 70 |     let timeout: ReturnType<typeof setTimeout>;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 71 |     return (media: Media) => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 72 |       clearTimeout(timeout);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 73 |       timeout = setTimeout(() => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 74 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 75 |       }, 300);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 76 |     };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 77 |   }, [userId]);
+     | ^^^^^^^^^^^^^^^ This function may (indirectly) reassign or modify `timeout` after render
+  78 |
+  79 |   // ── D-pad Navigation ──
+  80 |   useDpadNavigation({
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Home/Home.tsx:73:7
+  71 |     return (media: Media) => {
+  72 |       clearTimeout(timeout);
+> 73 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ This modifies `timeout`
+  74 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  75 |       }, 300);
+  76 |     };  react-hooks/immutability
+  73:7   error  Error: Cannot reassign variable after render completes
+
+Reassigning `timeout` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Home/Home.tsx:73:7
+  71 |     return (media: Media) => {
+  72 |       clearTimeout(timeout);
+> 73 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ Cannot reassign `timeout` after render completes
+  74 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  75 |       }, 300);
+  76 |     };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         react-hooks/immutability
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Movies/MoviesPage.tsx
+  37:23  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `timeout` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Movies/MoviesPage.tsx:37:23
+  35 |   };
+  36 |
+> 37 |   const handleHover = React.useMemo(() => {
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+> 38 |     let timeout: ReturnType<typeof setTimeout>;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |     return (media: Media) => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |       clearTimeout(timeout);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |       timeout = setTimeout(() => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 43 |       }, 300);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 44 |     };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 45 |   }, [userId]);
+     | ^^^^^^^^^^^^^^^ This function may (indirectly) reassign or modify `timeout` after render
+  46 |
+  47 |   const handleToggleFavorite = (media: Media) => {
+  48 |     toggleFavorite({ mediaId: media.id, isFavorite: !media.isFavorite });
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Movies/MoviesPage.tsx:41:7
+  39 |     return (media: Media) => {
+  40 |       clearTimeout(timeout);
+> 41 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ This modifies `timeout`
+  42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  43 |       }, 300);
+  44 |     };  react-hooks/immutability
+  41:7   error  Error: Cannot reassign variable after render completes
+
+Reassigning `timeout` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Movies/MoviesPage.tsx:41:7
+  39 |     return (media: Media) => {
+  40 |       clearTimeout(timeout);
+> 41 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ Cannot reassign `timeout` after render completes
+  42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  43 |       }, 300);
+  44 |     };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/immutability
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/New/NewPage.tsx
+  37:23  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `timeout` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/New/NewPage.tsx:37:23
+  35 |   };
+  36 |
+> 37 |   const handleHover = React.useMemo(() => {
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+> 38 |     let timeout: ReturnType<typeof setTimeout>;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |     return (media: Media) => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |       clearTimeout(timeout);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |       timeout = setTimeout(() => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 43 |       }, 300);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 44 |     };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 45 |   }, [userId]);
+     | ^^^^^^^^^^^^^^^ This function may (indirectly) reassign or modify `timeout` after render
+  46 |
+  47 |   const handleToggleFavorite = (media: Media) => {
+  48 |     toggleFavorite({ mediaId: media.id, isFavorite: !media.isFavorite });
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/New/NewPage.tsx:41:7
+  39 |     return (media: Media) => {
+  40 |       clearTimeout(timeout);
+> 41 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ This modifies `timeout`
+  42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  43 |       }, 300);
+  44 |     };  react-hooks/immutability
+  41:7   error  Error: Cannot reassign variable after render completes
+
+Reassigning `timeout` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/New/NewPage.tsx:41:7
+  39 |     return (media: Media) => {
+  40 |       clearTimeout(timeout);
+> 41 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ Cannot reassign `timeout` after render completes
+  42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  43 |       }, 300);
+  44 |     };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     react-hooks/immutability
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Series/SeriesPage.tsx
+  37:23  error  Error: Cannot modify local variables after render completes
+
+This argument is a function which may reassign or mutate `timeout` after render, which can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Series/SeriesPage.tsx:37:23
+  35 |   };
+  36 |
+> 37 |   const handleHover = React.useMemo(() => {
+     |                       ^^^^^^^^^^^^^^^^^^^^^
+> 38 |     let timeout: ReturnType<typeof setTimeout>;
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 39 |     return (media: Media) => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |       clearTimeout(timeout);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 41 |       timeout = setTimeout(() => {
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 43 |       }, 300);
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 44 |     };
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 45 |   }, [userId]);
+     | ^^^^^^^^^^^^^^^ This function may (indirectly) reassign or modify `timeout` after render
+  46 |
+  47 |   const handleToggleFavorite = (media: Media) => {
+  48 |     toggleFavorite({ mediaId: media.id, isFavorite: !media.isFavorite });
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Series/SeriesPage.tsx:41:7
+  39 |     return (media: Media) => {
+  40 |       clearTimeout(timeout);
+> 41 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ This modifies `timeout`
+  42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  43 |       }, 300);
+  44 |     };  react-hooks/immutability
+  41:7   error  Error: Cannot reassign variable after render completes
+
+Reassigning `timeout` after render has completed can cause inconsistent behavior on subsequent renders. Consider using state instead.
+
+/Users/joseviccaro/Desktop/Movixy/src/presentation/pages/Series/SeriesPage.tsx:41:7
+  39 |     return (media: Media) => {
+  40 |       clearTimeout(timeout);
+> 41 |       timeout = setTimeout(() => {
+     |       ^^^^^^^ Cannot reassign `timeout` after render completes
+  42 |         MediaPlaybackService.preResolve(media, userId).catch(() => {});
+  43 |       }, 300);
+  44 |     };                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/immutability
+
+✖ 16 problems (16 errors, 0 warnings)
+

@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import styles from './FilterBar.module.css';
 
 export interface FilterState {
@@ -35,6 +35,7 @@ const LANGUAGES = [
 ];
 
 export const FilterBar = ({ onFilterChange }: FilterBarProps) => {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     genres: [],
     years: [],
@@ -43,6 +44,14 @@ export const FilterBar = ({ onFilterChange }: FilterBarProps) => {
     mediaType: 'all',
   });
   const [expanded, setExpanded] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleFilter = (key: 'genres' | 'years' | 'ratings' | 'languages', value: string | number) => {
     setFilters(prev => {
@@ -85,7 +94,7 @@ export const FilterBar = ({ onFilterChange }: FilterBarProps) => {
                           filters.mediaType !== 'all';
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ${isScrolled ? styles.scrolled : ''}`}>
       <div className={styles.header}>
         <div className={styles.mediaTypeSelector}>
           <select 

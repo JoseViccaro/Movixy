@@ -30,5 +30,5 @@ if (typeof globalThis !== 'undefined') {
 
 // Fix ReferenceError: self is not defined for Workbox/PWA tests
 if (typeof globalThis !== 'undefined' && !globalThis.self) {
-  (globalThis as any).self = globalThis;
+  Object.defineProperty(globalThis, 'self', { value: globalThis });
 }

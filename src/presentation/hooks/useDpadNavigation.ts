@@ -31,6 +31,9 @@ interface UseDpadOptions {
   initialFocusSelector?: string;
 }
 
+// Memory of last focused element in each section/row
+const SECTION_MEMORY: Record<string, HTMLElement> = {};
+
 // Focusable selector
 const FOCUSABLE_SELECTOR = '[data-focusable="true"]';
 
@@ -121,9 +124,17 @@ export function useDpadNavigation(options: UseDpadOptions = {}) {
     if (el) {
       el.setAttribute('data-focused', 'true');
       el.classList.add('dpad-focused');
-      el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      
+      // Auto-scroll logic: centered for TV feel
+      el.scrollIntoView({ block: 'center', inline: 'center', behavior: 'smooth' });
       el.focus({ preventScroll: true });
       focusedRef.current = el;
+
+      // Update memory if section is defined
+      const section = el.getAttribute('data-section');
+      if (section) {
+        SECTION_MEMORY[section] = el;
+      }
     }
   }, []);
 

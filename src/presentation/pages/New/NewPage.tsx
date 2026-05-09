@@ -1,11 +1,11 @@
 import React, { useState, Suspense, lazy, useRef } from 'react';
-import { useMovies } from '@/application/hooks/useMedia';
+import { usePopular } from '@/application/hooks/useMedia';
 import { MovieCard } from '@/presentation/components/MovieRow/MovieCard';
 import { Skeleton } from '@/presentation/components/Skeleton/Skeleton';
 import { MediaPlaybackService } from '@/application/services/media-playback.service';
 import { useFavoriteToggle } from '@/application/hooks/useFavorites';
 import type { Media } from '@/domain/models/media.model';
-import styles from './Gallery.module.css';
+import styles from '../Movies/Gallery.module.css';
 
 const VideoPlayer = lazy(() =>
   import('@/presentation/components/VideoPlayer/VideoPlayer').then((m) => ({ default: m.VideoPlayer })),
@@ -14,9 +14,9 @@ const MediaModal = lazy(() =>
   import('@/presentation/components/MediaModal/MediaModal').then((m) => ({ default: m.MediaModal })),
 );
 
-export const MoviesPage: React.FC = () => {
+export const NewPage: React.FC = () => {
   const userId = localStorage.getItem('movixy_user_id') || '';
-  const { data: movies = [], isLoading } = useMovies(userId);
+  const { data: popular = [], isLoading } = usePopular(userId);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const [playingMedia, setPlayingMedia] = useState<Media | null>(null);
   const [playbackUrl, setPlaybackUrl] = useState('');
@@ -48,12 +48,12 @@ export const MoviesPage: React.FC = () => {
     toggleFavorite({ mediaId: media.id, isFavorite: !media.isFavorite });
   };
 
-  if (isLoading && movies.length === 0) {
+  if (isLoading && popular.length === 0) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>Películas</h1>
+        <h1 className={styles.title}>Novedades</h1>
         <div className={styles.grid}>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <Skeleton key={i} type="card" />
           ))}
         </div>
@@ -63,12 +63,12 @@ export const MoviesPage: React.FC = () => {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Películas</h1>
+      <h1 className={styles.title}>Novedades</h1>
       <div className={styles.grid}>
-        {movies.map((movie) => (
+        {popular.map((item) => (
           <MovieCard 
-            key={movie.id} 
-            movie={movie} 
+            key={item.id} 
+            movie={item} 
             onSelect={setSelectedMedia}
             onPlay={handlePlay}
             onToggleFavorite={handleToggleFavorite}
@@ -100,3 +100,5 @@ export const MoviesPage: React.FC = () => {
     </div>
   );
 };
+
+export default NewPage;

@@ -25,6 +25,10 @@ export class JellyfinMediaRepository implements IMediaRepository {
     this.userId = userId;
   }
 
+  getUserId(): string {
+    return this.userId;
+  }
+
   async getPopular(
     limit = PAGE_SIZE,
     startIndex = 0,
@@ -113,6 +117,8 @@ export class JellyfinMediaRepository implements IMediaRepository {
       parentId: seriesId,
       includeItemTypes: ['Episode'],
       limit: 1,
+      sortBy: 'SortName',
+      sortOrder: 'Ascending',
     });
     return response.Items[0]?.Id ?? null;
   }

@@ -1,6 +1,7 @@
 import { Play, Plus, Check, Info } from 'lucide-react';
 import { OptimizedImage } from '@/presentation/components/OptimizedImage/OptimizedImage';
 import styles from './MovieRow.module.css';
+import { useBackdrop } from '@/presentation/components/ImmersiveBackdrop/BackdropContext';
 import type { Media } from '@/domain/models/media.model';
 
 interface MovieCardProps {
@@ -8,16 +9,34 @@ interface MovieCardProps {
   onSelect: (media: Media) => void;
   onPlay?: (media: Media) => void;
   onToggleFavorite?: (media: Media) => void;
-  handleContextMenu: (e: React.MouseEvent, movie: Media) => void;
-  handleKeyDown: (e: React.KeyboardEvent, movie: Media) => void;
+  onHover?: (media: Media) => void;
+  handleContextMenu?: (e: React.MouseEvent, movie: Media) => void;
+  handleKeyDown?: (e: React.KeyboardEvent, movie: Media) => void;
 }
 
-export const MovieCard = ({ movie, onSelect, onPlay, onToggleFavorite, handleContextMenu, handleKeyDown }: MovieCardProps) => {
+export const MovieCard = ({ 
+  movie, 
+  onSelect, 
+  onPlay, 
+  onToggleFavorite, 
+  onHover,
+  handleContextMenu = () => {}, 
+  handleKeyDown = () => {} 
+}: MovieCardProps) => {
+  const { setUrl } = useBackdrop();
+
+  const handleMouseEnter = () => {
+    setUrl(movie.backdropPath);
+    onHover?.(movie);
+  };
+
   return (
     <div
       className={styles.card}
       onContextMenu={(e) => handleContextMenu(e, movie)}
       onKeyDown={(e) => handleKeyDown(e, movie)}
+      onMouseEnter={handleMouseEnter}
+      onFocus={handleMouseEnter}
       onClick={() => onPlay?.(movie)}
       role="listitem"
       tabIndex={0}
