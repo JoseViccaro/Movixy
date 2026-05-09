@@ -1,4 +1,4 @@
-import { useState, ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { BackdropContext } from './BackdropContext';
 
 export function BackdropProvider({ children }: { children: ReactNode }) {
