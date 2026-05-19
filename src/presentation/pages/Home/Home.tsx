@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, Suspense, lazy, useRef } from 'react';
 import { Hero } from '@/presentation/components/Hero/Hero';
 import { MovieRow } from '@/presentation/components/MovieRow/MovieRow';
 import { FilterBar, type FilterState } from '@/presentation/components/FilterBar/FilterBar';
+import type { FilterOptions } from '@/domain/repositories/media.repository';
 import { Skeleton } from '@/presentation/components/Skeleton/Skeleton';
 import { Navbar } from '@/presentation/components/Navbar/Navbar';
 import { usePopular, useMovies, useSeries, useFiltered, useSearch } from '@/application/hooks/useMedia';
@@ -32,7 +33,7 @@ export function HomePage() {
   const { data: movies = [] } = useMovies(userId);
   const { data: series = [] } = useSeries(userId);
   const { data: continueWatching = [] } = useContinueWatching(userId);
-  const { data: filtered = [] } = useFiltered(userId, filters || undefined);
+  const { data: filtered = [] } = useFiltered(userId, filters as FilterOptions | null);
   const { data: searchResults = [] } = useSearch(userId, searchQuery);
   const { mutate: toggleFavorite } = useFavoriteToggle(userId);
 
