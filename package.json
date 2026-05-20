@@ -14,6 +14,7 @@
     "test:coverage": "vitest run --coverage",
     "cap:sync": "npx cap copy",
     "cap:build": "npm run build && npx cap copy",
+    "cap:apk": "npm run build && npx cap copy && cd android && JAVA_HOME=/opt/homebrew/opt/openjdk@21 ./gradlew assembleDebug && open app/build/outputs/apk/debug/",
     "prepare": "husky"
   },
   "lint-staged": {
