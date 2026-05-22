@@ -6,8 +6,10 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     cleartext: true,
+    allowNavigation: ['*'],
   },
   android: {
+    allowMixedContent: true,
     buildOptions: {
       keystorePath: undefined,
       keystoreAlias: undefined,

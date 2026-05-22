@@ -400,10 +400,7 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     video.addEventListener('canplay', onCanPlay);
     video.addEventListener('ended', handleEnded);
 
-    if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = streamUrl;
-      video.addEventListener('loadedmetadata', onLoaded);
-    } else if (Hls.isSupported()) {
+    if (Hls.isSupported()) {
       const hls = new Hls({
         enableWorker: true,
         maxBufferLength: 10, // Menos buffer inicial para arrancar antes
@@ -470,6 +467,9 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
         if (startPosition && startPosition > 0) video.currentTime = startPosition;
         video.play().catch(() => {});
       });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+      video.addEventListener('loadedmetadata', onLoaded);
     }
 
     return () => {
