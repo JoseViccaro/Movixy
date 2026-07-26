@@ -5,29 +5,35 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
+  background-color: #050505;
 }
 
 .backdrop {
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(ellipse at 20% 50%, rgba(229, 9, 20, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at 50% 80%, rgba(15, 23, 42, 0.8) 0%, transparent 60%),
-    var(--background);
-  z-index: -1;
+    radial-gradient(ellipse at 50% 30%, rgba(229, 9, 20, 0.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 15% 85%, rgba(120, 20, 180, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 75%, rgba(15, 23, 42, 0.9) 0%, transparent 65%),
+    #050505;
+  z-index: 0;
 }
 
 .formWrapper {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 420px;
-  padding: 48px 40px;
-  background: rgba(20, 20, 20, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  max-width: 440px;
+  padding: 52px 44px;
+  background: rgba(15, 15, 18, 0.75);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border-radius: 20px;
+  border: 1px solid rgba(229, 9, 20, 0.25);
+  box-shadow: 
+    0 0 40px rgba(229, 9, 20, 0.15),
+    0 30px 60px rgba(0, 0, 0, 0.9);
+  animation: scaleIn 0.5s ease-out;
 }
 
 .logoSection {
@@ -83,25 +89,25 @@
 
 .input {
   width: 100%;
-  padding: 14px 16px;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  padding: 15px 18px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
   color: var(--text-primary);
   font-size: 0.95rem;
   font-family: inherit;
-  transition: var(--transition);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   outline: none;
 }
 
 .input::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.3);
 }
 
 .input:focus {
-  border-color: var(--primary);
-  background: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.15);
+  border-color: #e50914;
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
 }
 
 .passwordWrapper {
@@ -118,7 +124,7 @@
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-secondary);
-  padding: 4px;
+  padding: 6px;
   transition: var(--transition);
 }
 
@@ -127,35 +133,38 @@
 }
 
 .error {
-  background: rgba(229, 9, 20, 0.15);
-  color: #ff6b6b;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  border: 1px solid rgba(229, 9, 20, 0.3);
+  background: rgba(229, 9, 20, 0.18);
+  color: #ff4d4d;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  border: 1px solid rgba(229, 9, 20, 0.4);
+  box-shadow: 0 4px 15px rgba(229, 9, 20, 0.2);
 }
 
 .submitButton {
   width: 100%;
-  padding: 14px;
-  background: var(--primary);
+  padding: 16px;
+  background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
   color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 8px;
-  transition: var(--transition);
-  margin-top: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border-radius: 10px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-top: 0.75rem;
   font-family: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 50px;
+  min-height: 52px;
+  box-shadow: 0 8px 25px rgba(229, 9, 20, 0.35);
 }
 
 .submitButton:hover:not(:disabled) {
-  background: #f40612;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 20px rgba(229, 9, 20, 0.4);
+  background: linear-gradient(135deg, #f40612 0%, #c40712 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(229, 9, 20, 0.5);
 }
 
 .submitButton:disabled {

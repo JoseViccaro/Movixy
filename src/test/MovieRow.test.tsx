@@ -84,4 +84,28 @@ describe('MovieRow', () => {
     
     expect(container.firstChild).toBeNull();
   });
+
+  it('calls onHover when mouse enters card', () => {
+    const handleSelect = vi.fn();
+    const handleHover = vi.fn();
+    render(<MovieRow title="Popular Movies" movies={mockMovies} onSelect={handleSelect} onHover={handleHover} />);
+
+    const card = screen.getByText('Test Movie 1').closest('[data-testid="movie-card"]');
+    expect(card).toBeInTheDocument();
+
+    fireEvent.mouseEnter(card!);
+    expect(handleHover).toHaveBeenCalledWith(mockMovies[0]);
+  });
+
+  it('calls onHover when card receives focus', () => {
+    const handleSelect = vi.fn();
+    const handleHover = vi.fn();
+    render(<MovieRow title="Popular Movies" movies={mockMovies} onSelect={handleSelect} onHover={handleHover} />);
+
+    const card = screen.getByText('Test Movie 1').closest('[data-testid="movie-card"]');
+    expect(card).toBeInTheDocument();
+
+    fireEvent.focus(card!);
+    expect(handleHover).toHaveBeenCalledWith(mockMovies[0]);
+  });
 });

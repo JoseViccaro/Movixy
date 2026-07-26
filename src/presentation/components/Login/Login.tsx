@@ -27,8 +27,19 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('movixy_username', username);
-    onLogin(serverUrl, username, password);
+    const cleanUsername = username
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+      .trim();
+    const cleanServerUrl = serverUrl
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+      .trim();
+    localStorage.setItem('movixy_username', cleanUsername);
+    localStorage.setItem('movixy_server_url', cleanServerUrl);
+    onLogin(cleanServerUrl, cleanUsername, password);
   };
 
   return (
@@ -51,6 +62,9 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
               className={styles.input}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
               data-focusable="true"
             />
             <p className={styles.inputHint}>Usa tu IP local si estás en la tele (ej: 192.168.1.50)</p>
@@ -66,6 +80,9 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
               onChange={(e) => setUsername(e.target.value)}
               className={styles.input}
               autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
               data-focusable="true"
             />
           </div>
@@ -81,6 +98,9 @@ export const Login = ({ onLogin, isLoading, error }: LoginProps) => {
                 onChange={(e) => setPassword(e.target.value)}
                 className={styles.input}
                 autoComplete="current-password"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
                 data-focusable="true"
               />
               <button

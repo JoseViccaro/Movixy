@@ -3,10 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MovieRow } from '@/presentation/components/MovieRow/MovieRow';
 import type { Media } from '@/domain/models/media.model';
 
-// Mock BackdropContext
-vi.mock('@/presentation/components/ImmersiveBackdrop/BackdropContext', () => ({
-  useBackdrop: () => ({ setUrl: vi.fn() })
-}));
+import { BackdropProvider } from '@/presentation/components/ImmersiveBackdrop/BackdropProvider';
 
 // Mock data
 const mockMovies: Media[] = Array.from({ length: 100 }, (_, i) => ({
@@ -28,11 +25,13 @@ describe('MovieRow Virtualization (T7)', () => {
 
   it('should render react-window VirtualList for large lists', () => {
     render(
-      <MovieRow 
-        title="Many Movies" 
-        movies={mockMovies} 
-        onSelect={() => {}} 
-      />
+      <BackdropProvider>
+        <MovieRow 
+          title="Many Movies" 
+          movies={mockMovies} 
+          onSelect={() => {}} 
+        />
+      </BackdropProvider>
     );
     
     // Should use VirtualList from react-window
@@ -42,11 +41,13 @@ describe('MovieRow Virtualization (T7)', () => {
 
   it('should render only visible items (not all 100)', () => {
     render(
-      <MovieRow 
-        title="Many Movies" 
-        movies={mockMovies} 
-        onSelect={() => {}} 
-      />
+      <BackdropProvider>
+        <MovieRow 
+          title="Many Movies" 
+          movies={mockMovies} 
+          onSelect={() => {}} 
+        />
+      </BackdropProvider>
     );
     
     // Should NOT render all 100 movie cards

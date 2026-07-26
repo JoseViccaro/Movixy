@@ -23,6 +23,8 @@ import Hls from 'hls.js';
 import { useToast } from '@/presentation/components/Toast/ToastContext';
 import { useFullscreen } from '@/presentation/hooks/useFullscreen';
 import type { Media } from '@/domain/models/media.model';
+import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
+import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
 import styles from './VideoPlayer.module.css';
 
 interface VideoPlayerProps {
@@ -254,6 +256,43 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     setHoverTime({ time: ratio * v.duration, x: e.clientX - rect.left });
   };
 
+  const saveProgress = useCallback(async () => {
+    if (!media?.id || !videoRef.current) return;
+    const userId = localStorage.getItem('movixy_user_id');
+    if (!userId) return;
+    try {
+      const client = await JellyfinApiClient.create();
+      const repository = new JellyfinMediaRepository(client, userId);
+      const positionTicks = Math.floor((videoRef.current.currentTime || 0) * 10_000_000);
+      await repository.updatePlaybackPosition(media.id, positionTicks);
+    } catch (err) {
+      console.error('Playback sync failed:', err);
+    }
+  }, [media]);
+
+  const handleClose = useCallback(async () => {
+    await saveProgress();
+    onClose();
+  }, [saveProgress, onClose]);
+
+  // Periodic progress sync loop (every 10 seconds of active playback)
+  useEffect(() => {
+    if (!isPlaying || !media?.id) return;
+
+    const intervalId = setInterval(async () => {
+      await saveProgress();
+    }, 10000);
+
+    return () => clearInterval(intervalId);
+  }, [isPlaying, media?.id, saveProgress]);
+
+  // Save progress on unmount
+  useEffect(() => {
+    return () => {
+      saveProgress();
+    };
+  }, [saveProgress]);
+
   // ── Keyboard shortcuts (Fire TV & Remote optimized) ───────────────────────
   useEffect(() => {
     const handleKey = (e: globalThis.KeyboardEvent) => {
@@ -262,23 +301,32 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
 
       resetHideTimer();
 
+      // Detectar teclas de retroceso (control remoto de TV y teclado estándar)
+      const isBackKey =
+        e.key === 'Escape' ||
+        e.key === 'Backspace' ||
+        e.key === 'GoBack' ||
+        (e as KeyboardEvent & { keyCode: number }).keyCode === 4;
+
+      if (isBackKey) {
+        // Si hay algún menú o configuración abierto, lo cerramos primero
+        if (showSubtitleSettings) {
+          e.preventDefault();
+          setShowSubtitleSettings(false);
+          setShowSubtitlesMenu(true);
+        } else if (showSubtitlesMenu || showAudioMenu || showSpeedMenu) {
+          e.preventDefault();
+          setShowSubtitlesMenu(false);
+          setShowAudioMenu(false);
+          setShowSpeedMenu(false);
+        } else {
+          e.preventDefault();
+          handleClose();
+        }
+        return;
+      }
+
       switch (e.key) {
-        case 'Escape':
-        case 'Backspace':
-          // If a menu is open, close it first
-          if (showSubtitleSettings) {
-            e.preventDefault();
-            setShowSubtitleSettings(false);
-            setShowSubtitlesMenu(true);
-          } else if (showSubtitlesMenu || showAudioMenu || showSpeedMenu) {
-            e.preventDefault();
-            setShowSubtitlesMenu(false);
-            setShowAudioMenu(false);
-            setShowSpeedMenu(false);
-          } else if (e.key === 'Escape') {
-            onClose();
-          }
-          break;
         case ' ':
         case 'Enter':
         case 'k':
@@ -338,7 +386,7 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = 'auto';
     };
-  }, [onClose, togglePlayPause, handleToggleFullscreen, toggleMute, seek, adjustVolume, showControls, showSubtitlesMenu, showAudioMenu, showSpeedMenu, showSubtitleSettings, resetHideTimer]);
+  }, [handleClose, togglePlayPause, toggleMute, seek, adjustVolume, showControls, showSubtitlesMenu, showAudioMenu, showSpeedMenu, showSubtitleSettings, resetHideTimer]);
 
   // ── Wake Lock (Keep screen on) ──────────────────────────────────────────
   useEffect(() => {
@@ -372,6 +420,8 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+
 
   // ── HLS / video source setup ──────────────────────────────────────────────
   useEffect(() => {
@@ -551,7 +601,7 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
 
         {/* ─ Top Bar: Title + Close ──────────────────────────────────────── */}
         <div className={styles.topBar}>
-          <button className={styles.iconBtn} onClick={onClose} aria-label="Cerrar" data-focusable="true">
+          <button className={styles.iconBtn} onClick={handleClose} aria-label="Cerrar" data-focusable="true">
             <X size={24} />
           </button>
           <h2 className={styles.title}>{title}</h2>

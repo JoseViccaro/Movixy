@@ -40,15 +40,29 @@ export default function LoginPage() {
     setError(null);
     setShowSplash(false);
 
-    let normalizedUrl = serverUrl.trim();
+    let normalizedUrl = serverUrl
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+      .trim();
+
     if (normalizedUrl && !normalizedUrl.startsWith('http') && !normalizedUrl.startsWith('/')) {
       normalizedUrl = `http://${normalizedUrl}`;
     }
+    
+    // Clean any double slashes after protocol and trailing slashes
+    normalizedUrl = normalizedUrl.replace(/^(https?):\/\/+/i, '$1://').replace(/\/+$/, '');
+
+    const cleanUsername = username
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+      .trim();
 
     try {
       // Pass the normalized URL to the client so it connects to the right host
       const client = new JellyfinApiClient('', normalizedUrl);
-      const response = await client.authenticate(username, password);
+      const response = await client.authenticate(cleanUsername, password);
 
       await secureStorage.setToken(response.AccessToken);
       localStorage.setItem('movixy_server_url', normalizedUrl);
@@ -61,7 +75,8 @@ export default function LoginPage() {
         url: normalizedUrl,
         error: err
       });
-      setError(`No se pudo conectar a ${normalizedUrl}. Verifica que el servidor esté encendido.`);
+      const errorDetail = err instanceof Error ? err.message : String(err);
+      setError(`No se pudo conectar a ${normalizedUrl} (${errorDetail}). Verifica que el servidor esté encendido.`);
     } finally {
       setIsLoading(false);
     }

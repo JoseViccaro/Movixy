@@ -12,7 +12,13 @@ export const TrailerModal = ({ title, onClose }: TrailerModalProps) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (
+        e.key === 'Escape' ||
+        e.key === 'Backspace' ||
+        e.key === 'GoBack' ||
+        (e as KeyboardEvent & { keyCode: number }).keyCode === 4
+      ) {
+        e.preventDefault();
         onClose();
       }
     };

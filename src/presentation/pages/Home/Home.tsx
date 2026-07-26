@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, Suspense, lazy, useRef } from 'react';
+import { useState, useEffect, useMemo, useCallback, Suspense, lazy, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Hero } from '@/presentation/components/Hero/Hero';
 import { MovieRow } from '@/presentation/components/MovieRow/MovieRow';
 import { FilterBar, type FilterState } from '@/presentation/components/FilterBar/FilterBar';
@@ -13,29 +14,27 @@ import type { Media } from '@/domain/models/media.model';
 import styles from './Home.module.css';
 
 // Lazy load heavy components
-const VideoPlayer = lazy(() =>
-  import('@/presentation/components/VideoPlayer/VideoPlayer').then((m) => ({ default: m.VideoPlayer })),
-);
 const MediaModal = lazy(() =>
   import('@/presentation/components/MediaModal/MediaModal').then((m) => ({ default: m.MediaModal })),
 );
 
 export function HomePage() {
   const userId = localStorage.getItem('movixy_user_id') || '';
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<FilterState | null>(null);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
-  const [playingMedia, setPlayingMedia] = useState<Media | null>(null);
-  const [playbackUrl, setPlaybackUrl] = useState('');
 
   // ── Data Fetching ──
-  const { data: popular = [], isLoading: isLoadingPopular } = usePopular(userId);
-  const { data: movies = [] } = useMovies(userId);
-  const { data: series = [] } = useSeries(userId);
+  const { data: popular = [], isLoading: isLoadingPopular, error: popularError } = usePopular(userId);
+  const { data: movies = [], error: moviesError } = useMovies(userId);
+  const { data: series = [], error: seriesError } = useSeries(userId);
   const { data: continueWatching = [] } = useContinueWatching(userId);
   const { data: filtered = [] } = useFiltered(userId, filters as FilterOptions | null);
   const { data: searchResults = [] } = useSearch(userId, searchQuery);
   const { mutate: toggleFavorite } = useFavoriteToggle(userId);
+
+  const fetchError = (popularError || moviesError || seriesError) as Error | null;
 
   const heroMovie = useMemo(() => popular[0] || null, [popular]);
 
@@ -47,18 +46,8 @@ export function HomePage() {
   }, [userId]);
 
   // ── Handlers ──
-  const handlePlay = async (media: Media) => {
-    // Open player immediately for instant feedback
-    setPlayingMedia(media);
-    setPlaybackUrl(''); // Clear previous URL
-    
-    try {
-      const url = await MediaPlaybackService.resolvePlaybackUrl(media, userId);
-      setPlaybackUrl(url);
-    } catch (error) {
-      console.error('Error starting playback:', error);
-      setPlayingMedia(null); // Close player on error
-    }
+  const handlePlay = (media: Media) => {
+    navigate(`/play/${media.id}`);
   };
 
   const handleSelect = (media: Media) => setSelectedMedia(media);
@@ -68,18 +57,16 @@ export function HomePage() {
 
   // ── Pre-resolution (Hover) ──
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleHover = useMemo(() => {
-    return (media: Media) => {
-      if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
-      hoverTimeout.current = setTimeout(() => {
-        MediaPlaybackService.preResolve(media, userId).catch(() => {});
-      }, 300);
-    };
+  const handleHover = useCallback((media: Media) => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    hoverTimeout.current = setTimeout(() => {
+      MediaPlaybackService.preResolve(media, userId).catch(() => {});
+    }, 300);
   }, [userId]);
 
   // ── D-pad Navigation ──
   useDpadNavigation({
-    enabled: !playingMedia && !selectedMedia,
+    enabled: !selectedMedia,
     onBack: () => {
       if (searchQuery) setSearchQuery('');
       else if (filters) setFilters(null);
@@ -102,6 +89,13 @@ export function HomePage() {
 
   return (
     <div className={styles.home}>
+      {fetchError && (
+        <div style={{ padding: '20px', margin: '20px', backgroundColor: 'rgba(255, 77, 77, 0.15)', border: '1px solid #ff4d4d', borderRadius: '8px', color: '#ff8080', fontSize: '14px', zIndex: 1000, position: 'relative' }}>
+          <strong style={{ display: 'block', marginBottom: '5px', fontSize: '16px' }}>Error de conexión / carga:</strong>
+          <div>{fetchError.message}</div>
+          <div style={{ marginTop: '5px', opacity: 0.8 }}>Intentando conectar a: {localStorage.getItem('movixy_server_url')}</div>
+        </div>
+      )}
       {!searchQuery && !filters ? (
         <>
           <Hero 
@@ -174,16 +168,6 @@ export function HomePage() {
       )}
 
       {/* Modals and Overlays */}
-      {playingMedia && (
-        <Suspense fallback={null}>
-          <VideoPlayer
-            streamUrl={playbackUrl}
-            title={playingMedia.title}
-            media={playingMedia}
-            onClose={() => setPlayingMedia(null)}
-          />
-        </Suspense>
-      )}
 
       {selectedMedia && (
         <Suspense fallback={null}>

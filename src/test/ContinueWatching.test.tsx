@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '../presentation/components/Toast/Toast';
 import { HomePage } from '../presentation/pages/Home/Home';
-import { useContinueWatching } from '../application/hooks/useFavorites';
+import { useContinueWatching } from '@application/hooks/useFavorites';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } }

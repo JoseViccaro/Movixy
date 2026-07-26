@@ -1,4 +1,5 @@
 import React, { useState, Suspense, lazy, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePopular } from '@/application/hooks/useMedia';
 import { MovieCard } from '@/presentation/components/MovieRow/MovieCard';
 import { Skeleton } from '@/presentation/components/Skeleton/Skeleton';
@@ -7,41 +8,28 @@ import { useFavoriteToggle } from '@/application/hooks/useFavorites';
 import type { Media } from '@/domain/models/media.model';
 import styles from '../Movies/Gallery.module.css';
 
-const VideoPlayer = lazy(() =>
-  import('@/presentation/components/VideoPlayer/VideoPlayer').then((m) => ({ default: m.VideoPlayer })),
-);
+// Lazy load heavy components
 const MediaModal = lazy(() =>
   import('@/presentation/components/MediaModal/MediaModal').then((m) => ({ default: m.MediaModal })),
 );
 
 export const NewPage: React.FC = () => {
   const userId = localStorage.getItem('movixy_user_id') || '';
+  const navigate = useNavigate();
   const { data: popular = [], isLoading } = usePopular(userId);
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
-  const [playingMedia, setPlayingMedia] = useState<Media | null>(null);
-  const [playbackUrl, setPlaybackUrl] = useState('');
   const { mutate: toggleFavorite } = useFavoriteToggle(userId);
 
-  const handlePlay = async (media: Media) => {
-    setPlayingMedia(media);
-    setPlaybackUrl('');
-    try {
-      const url = await MediaPlaybackService.resolvePlaybackUrl(media, userId);
-      setPlaybackUrl(url);
-    } catch (error) {
-      console.error('Error starting playback:', error);
-      setPlayingMedia(null);
-    }
+  const handlePlay = (media: Media) => {
+    navigate(`/play/${media.id}`);
   };
 
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const handleHover = React.useMemo(() => {
-    return (media: Media) => {
-      if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
-      hoverTimeout.current = setTimeout(() => {
-        MediaPlaybackService.preResolve(media, userId).catch(() => {});
-      }, 300);
-    };
+  const handleHover = React.useCallback((media: Media) => {
+    if (hoverTimeout.current) clearTimeout(hoverTimeout.current);
+    hoverTimeout.current = setTimeout(() => {
+      MediaPlaybackService.preResolve(media, userId).catch(() => {});
+    }, 300);
   }, [userId]);
 
   const handleToggleFavorite = (media: Media) => {
@@ -77,16 +65,7 @@ export const NewPage: React.FC = () => {
         ))}
       </div>
 
-      {playingMedia && (
-        <Suspense fallback={null}>
-          <VideoPlayer
-            streamUrl={playbackUrl}
-            title={playingMedia.title}
-            media={playingMedia}
-            onClose={() => setPlayingMedia(null)}
-          />
-        </Suspense>
-      )}
+      {/* Modals and Overlays */}
 
       {selectedMedia && (
         <Suspense fallback={null}>

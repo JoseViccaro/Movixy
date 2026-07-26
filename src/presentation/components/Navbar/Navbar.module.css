@@ -7,16 +7,16 @@
   justify-content: space-between;
   align-items: center;
   z-index: 100;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: var(--transition-cinematic);
   background-color: transparent;
 }
 
 .scrolled {
-  background-color: rgba(20, 20, 20, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background-color: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-webkit-blur);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: var(--glass-border);
 }
 
 .left, .right {
@@ -42,7 +42,7 @@
 
 .links li {
   cursor: pointer;
-  transition: var(--transition);
+  transition: var(--transition-cinematic);
   color: var(--text-secondary);
 }
 

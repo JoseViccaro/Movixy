@@ -16,9 +16,7 @@ vi.mock('@/application/hooks/useFavorites', () => ({
   useFavoriteToggle: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
 }));
 
-vi.mock('@/presentation/components/ImmersiveBackdrop/BackdropContext', () => ({
-  useBackdrop: () => ({ setUrl: vi.fn() })
-}));
+import { BackdropProvider } from '@/presentation/components/ImmersiveBackdrop/BackdropProvider';
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } }
@@ -32,11 +30,13 @@ describe('MoviesPage (T3)', () => {
   const renderPage = () => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <MemoryRouter>
-            <MoviesPage />
-          </MemoryRouter>
-        </ToastProvider>
+        <BackdropProvider>
+          <ToastProvider>
+            <MemoryRouter>
+              <MoviesPage />
+            </MemoryRouter>
+          </ToastProvider>
+        </BackdropProvider>
       </QueryClientProvider>
     );
   };

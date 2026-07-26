@@ -107,6 +107,14 @@ export default function PlayerPage() {
         } else if (mediaData.mediaType === 'episode') {
           setPlayableMedia(mediaData);
           setStreamUrl(client.getStreamUrl(mediaId));
+          if (mediaData.seriesId) {
+            try {
+              const episodesList = await repository.getEpisodes(mediaData.seriesId);
+              setEpisodes(episodesList);
+            } catch (err) {
+              console.error('Error loading sibling episodes:', err);
+            }
+          }
         } else {
           setPlayableMedia(mediaData);
           setStreamUrl(client.getStreamUrl(mediaId));

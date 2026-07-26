@@ -56,7 +56,13 @@ export const Navbar = ({ onSearch, onSelectMedia }: NavbarProps) => {
   };
 
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Escape') handleSearchClear();
+    if (
+      e.key === 'Escape' ||
+      e.key === 'GoBack' ||
+      (e as unknown as KeyboardEvent & { keyCode: number }).keyCode === 4
+    ) {
+      handleSearchClear();
+    }
   };
 
   const handleNavClick = (path: string) => (e: React.MouseEvent) => {

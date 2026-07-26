@@ -101,6 +101,39 @@ function findNearest(
   return nearest;
 }
 
+let audioCtx: AudioContext | null = null;
+
+function playFocusSound() {
+  try {
+    if (!audioCtx) {
+      const windowWithWebkit = window as unknown as { webkitAudioContext: typeof AudioContext };
+      audioCtx = new (window.AudioContext || windowWithWebkit.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    // Premium TV focus tick: 800Hz to 150Hz in 40ms, very low volume
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.04);
+
+    gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + 0.04);
+  } catch {
+    // Ignore audio context errors silently
+  }
+}
+
 export function useDpadNavigation(options: UseDpadOptions = {}) {
   const {
     containerSelector,
@@ -114,7 +147,13 @@ export function useDpadNavigation(options: UseDpadOptions = {}) {
 
   const focusedRef = useRef<HTMLElement | null>(null);
 
-  const setFocused = useCallback((el: HTMLElement | null) => {
+  const setFocused = useCallback((el: HTMLElement | null, playSound = true) => {
+    if (el && el !== focusedRef.current) {
+      if (playSound) {
+        playFocusSound();
+      }
+    }
+
     // Remove focus from previous
     if (focusedRef.current) {
       focusedRef.current.removeAttribute('data-focused');
@@ -263,7 +302,7 @@ export function useDpadNavigation(options: UseDpadOptions = {}) {
       const initial = container.querySelector<HTMLElement>(
         initialFocusSelector || FOCUSABLE_SELECTOR
       );
-      if (initial) setFocused(initial);
+      if (initial) setFocused(initial, false);
     }, 100);
 
     return () => clearTimeout(timer);
