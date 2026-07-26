@@ -2,18 +2,21 @@
 
 ## Overview
 
-Movixy follows **Clean Architecture** principles with a clear separation into three layers:
+Movixy follows **Clean Architecture** principles with a clear separation into four layers:
 
 ```
 ┌─────────────────────────────────────────┐
 │           Presentation                  │
-│  (React Components, Pages, Hooks)       │
+│  (React Components, Pages, UI Hooks)    │
+├─────────────────────────────────────────┤
+│           Application                   │
+│  (Use Cases, React Query Hooks)         │
 ├─────────────────────────────────────────┤
 │              Domain                     │
-│  (Models, Repository Interfaces)       │
+│  (Models, Repository Interfaces)        │
 ├─────────────────────────────────────────┤
 │               Data                      │
-│  (API Clients, Repository Impls)       │
+│  (API Clients, Repository Impls)        │
 └─────────────────────────────────────────┘
 ```
 
@@ -30,6 +33,14 @@ Contains business logic and entities - completely independent of frameworks.
 - **Repositories** (`domain/repositories/`)
   - Abstract interfaces defining data operations
   - e.g., `IMediaRepository.getMovies()`, `IMediaRepository.search()`
+
+### Application Layer (`src/application/`)
+
+Orchestrates application use-cases and manages server state using `@tanstack/react-query`.
+
+- **Hooks** (`application/hooks/`)
+  - Application hooks encapsulating data fetching (`useMedia.ts`, `useFavorites.ts`)
+  - Bridges Domain repositories with Presentation components
 
 ### Data Layer (`src/data/`)
 
@@ -53,6 +64,9 @@ React UI components - the only layer aware of React.
 - **Components** (`presentation/components/`)
   - Reusable UI components
   - Organized by feature (Login, Navbar, Hero, MovieRow, etc.)
+
+- **Hooks** (`presentation/hooks/`)
+  - Purely UI-focused hooks (e.g., DPAD navigation, fullscreen toggle)
 
 ### Core Layer (`src/core/`)
 
@@ -104,6 +118,7 @@ alias: {
   '@': './src',
   '@domain': './src/domain',
   '@data': './src/data',
+  '@application': './src/application',
   '@presentation': './src/presentation',
   '@core': './src/core',
 }
@@ -150,13 +165,11 @@ Abstraction over data sources allows:
 
 ## State Management
 
-Movixy uses React's built-in patterns:
+Movixy combines React built-ins and TanStack Query:
 
-- **useState** - Local component state
-- **useEffect** - Side effects (API calls)
-- **useContext** - Theme/auth state (future)
-
-No external state management library needed for current scope.
+- **TanStack Query (`@tanstack/react-query`)** - Server state management, automatic caching, revalidation, and loading/error states in `@application/hooks`
+- **useState** - Local component state (e.g., UI modals, input state)
+- **useContext** - Theme and authentication context
 
 ## Component Hierarchy
 

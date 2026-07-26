@@ -37,6 +37,7 @@ export interface Media {
   mediaType: 'movie' | 'tv' | 'episode';
   seasonNumber?: number;
   episodeNumber?: number;
+  seriesId?: string;
   isFavorite?: boolean;
   // Campos para historial de visionado
   playbackPositionTicks?: number;

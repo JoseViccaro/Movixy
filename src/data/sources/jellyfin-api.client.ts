@@ -1,3 +1,5 @@
+import { CapacitorHttp } from '@capacitor/core';
+import type { HttpHeaders } from '@capacitor/core';
 import { jellyfinConfig } from '@/core/config/jellyfin.config';
 import { secureStorage } from '@/core/utils/secure-storage';
 
@@ -22,9 +24,15 @@ export class JellyfinApiClient {
 
   /** Preferred factory — returns a singleton client with the token loaded. */
   static async create(): Promise<JellyfinApiClient> {
-    if (this.instance) return this.instance;
-    
     const token = (await secureStorage.getToken()) ?? jellyfinConfig.apiKey;
+    const url = jellyfinConfig.baseUrl;
+
+    if (this.instance) {
+      this.instance.token = token;
+      this.instance.baseUrl = url;
+      return this.instance;
+    }
+    
     this.instance = new JellyfinApiClient(token);
     return this.instance;
   }
@@ -48,14 +56,30 @@ export class JellyfinApiClient {
       ? endpoint
       : `${this.baseUrl}${endpoint}`;
 
+    // Parse the body to a JS object for CapacitorHttp
+    let data: unknown = undefined;
+    if (options?.body) {
+      try {
+        data = typeof options.body === 'string'
+          ? JSON.parse(options.body)
+          : options.body;
+      } catch {
+        data = options.body;
+      }
+    }
+
+    const headers: HttpHeaders = {
+      ...jellyfinConfig.staticHeaders(),
+      ...this.authHeaders(),
+      ...(options?.headers as Record<string, string>),
+    };
+
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          ...jellyfinConfig.staticHeaders(),
-          ...this.authHeaders(),
-          ...options?.headers,
-        },
+      const response = await CapacitorHttp.request({
+        url,
+        method: options?.method || 'GET',
+        headers,
+        data,
       });
 
       if (response.status === 401) {
@@ -66,7 +90,7 @@ export class JellyfinApiClient {
         throw Object.assign(new Error('Unauthorized'), { status: 401 });
       }
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         if (retries < this.maxRetries && response.status >= 500) {
           await new Promise((r) =>
             setTimeout(r, this.retryDelay * (retries + 1)),
@@ -74,11 +98,11 @@ export class JellyfinApiClient {
           return this.request<T>(endpoint, options, retries + 1);
         }
         throw new Error(
-          `Jellyfin API error: ${response.status} ${response.statusText}`,
+          `Jellyfin API error: ${response.status}`,
         );
       }
 
-      return response.json() as Promise<T>;
+      return response.data as T;
     } catch (error) {
       // Don't retry auth errors — they won't resolve with more attempts
       if (error instanceof Error && 'status' in error && (error as Error & { status: number }).status === 401) {
@@ -188,12 +212,8 @@ export class JellyfinApiClient {
   }
 
   async refreshLibrary() {
-    return fetch(`${this.baseUrl}/Library/Refresh`, {
+    return this.request<void>('/Library/Refresh', {
       method: 'POST',
-      headers: {
-        ...jellyfinConfig.staticHeaders(),
-        ...this.authHeaders(),
-      },
     });
   }
 
@@ -383,6 +403,7 @@ export interface JellyfinItem {
   IndexNumber?: number;
   ParentIndexNumber?: number;
   ChildCount?: number;
+  SeriesId?: string;
 }
 
 export interface JellyfinUserItemData {

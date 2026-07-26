@@ -1,0 +1,42 @@
+project: Movixy
+artifactStore:
+  mode: hybrid
+  openspecDir: openspec
+  engram:
+    project: movixy
+    sessionId: manual-save-movixy
+stack:
+  language: typescript
+  framework: react
+  build: vite
+  test: vitest
+  mobile: capacitor
+  lint: eslint
+  hooks: husky
+architecture:
+  pattern: clean
+  layers:
+    - domain
+    - data
+    - application
+    - presentation
+    - core
+  aliases:
+    "@": src
+    "@domain": src/domain
+    "@data": src/data
+    "@application": src/application
+    "@presentation": src/presentation
+    "@core": src/core
+testing:
+  runner: vitest
+  command: npm run test:run
+  strictTDD: true
+  environment: jsdom
+  globals: true
+  coverage: v8
+  setupFile: src/test/setup.ts
+delivery:
+  strategy: ask-on-risk
+  reviewBudgetLines: 400
+  chainStrategy: stacked-to-main

@@ -8,11 +8,18 @@
 
 export const jellyfinConfig = {
   get baseUrl(): string {
-    return (
+    const rawUrl =
       localStorage.getItem('movixy_server_url') ||
       import.meta.env.VITE_JELLYFIN_URL ||
-      '/jellyfin' // Usa el proxy local por defecto
-    );
+      '/jellyfin'; // Usa el proxy local por defecto
+
+    return rawUrl
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x1F\x7F-\x9F]/g, '')
+      .replace(/^(https?):\/\/+/i, '$1://')
+      .replace(/\/+$/, '')
+      .trim();
   },
 
   /** API key from env — used as fallback when no user token is present (e.g. image URLs). */

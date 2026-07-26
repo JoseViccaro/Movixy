@@ -84,12 +84,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       '@domain': path.resolve(__dirname, './src/domain'),
       '@data': path.resolve(__dirname, './src/data'),
+      '@application': path.resolve(__dirname, './src/application'),
       '@presentation': path.resolve(__dirname, './src/presentation'),
       '@core': path.resolve(__dirname, './src/core'),
     }
   },
   server: {
     host: true,
+    cors: true,
     proxy: {
       '/jellyfin': {
         target: 'http://127.0.0.1:8096',

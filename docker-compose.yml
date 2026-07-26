@@ -8,7 +8,15 @@ services:
     volumes:
       - ./jellyfin/config:/config
       - ./jellyfin/cache:/cache
-      # Disco externo Movixy
-      - /Volumes/Movixy/movies:/media/movies:ro
-      - /Volumes/Movixy/Series:/media/series:ro
+      # Disco externo Windows Portable
+      - /Volumes/Windows Portable :/media/movies:ro
     restart: 'unless-stopped'
+
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    command: tunnel --url http://jellyfin:8096
+    restart: 'unless-stopped'
+    depends_on:
+      - jellyfin
+

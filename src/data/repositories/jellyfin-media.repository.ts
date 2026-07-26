@@ -144,6 +144,12 @@ export class JellyfinMediaRepository implements IMediaRepository {
     }
   }
 
+  async updatePlaybackPosition(itemId: string, positionTicks: number): Promise<void> {
+    await this.client.updateItemUserData(this.userId, itemId, {
+      PlaybackPositionTicks: positionTicks,
+    });
+  }
+
   // --- Private helpers ---
 
   private deduplicate(items: Media[]): Media[] {
@@ -239,6 +245,7 @@ export class JellyfinMediaRepository implements IMediaRepository {
       mediaType,
       seasonNumber,
       episodeNumber,
+      seriesId: item.SeriesId,
       playbackPositionTicks,
       runtimeTicks,
       watchedPercentage,

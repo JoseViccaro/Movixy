@@ -124,4 +124,18 @@ describe('JellyfinMediaRepository Extended (T2)', () => {
       // TODO: Implementar lógica para obtener seasons y poblar result.seasons[]
     });
   });
+
+  describe('updatePlaybackPosition', () => {
+    it('should call updateItemUserData on the client with the correct arguments', async () => {
+      mockClient.updateItemUserData.mockResolvedValue(undefined);
+
+      await repository.updatePlaybackPosition('media-123', 500000);
+
+      expect(mockClient.updateItemUserData).toHaveBeenCalledWith(
+        userId,
+        'media-123',
+        { PlaybackPositionTicks: 500000 }
+      );
+    });
+  });
 });

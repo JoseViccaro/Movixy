@@ -24,4 +24,5 @@ export interface IMediaRepository {
   getSeasons(id: string): Promise<Media[]>;
   search(query: string): Promise<Media[]>;
   getFiltered(options: FilterOptions): Promise<Media[]>;
+  updatePlaybackPosition(mediaId: string, positionTicks: number): Promise<void>;
 }
