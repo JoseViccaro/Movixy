@@ -1,11 +1,15 @@
 # Logs
 logs
 *.log
+*_output.txt
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Tooling and Agent metadata
+.kiro/
+.atl/
 
 node_modules
 dist
@@ -32,3 +36,10 @@ media/
 jellyfin/
 !jellyfin/config/system.xml # Keep some basic config if needed, but better ignore all
 jellyfin/**
+
+# Build outputs
+coverage/
+android/app/build/
+
+# Uploaded assets
+assets/
