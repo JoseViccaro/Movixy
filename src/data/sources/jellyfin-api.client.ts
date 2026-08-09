@@ -220,7 +220,7 @@ export class JellyfinApiClient {
   async getEpisodes(userId: string, seriesId: string, seasonId?: string) {
     const params = new URLSearchParams({
       ParentId: seasonId || seriesId,
-      IncludeItemTypes: 'Episode',
+      IncludeItemTypes: 'Episode,Video',
       Recursive: seasonId ? 'false' : 'true',
       Fields: 'Overview,PrimaryImageAspectRatio',
       ImageTypeLimit: '1',

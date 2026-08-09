@@ -4,6 +4,7 @@ import { VideoPlayer } from '@/presentation/components/VideoPlayer/VideoPlayer';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
 import type { Media } from '@/domain/models/media.model';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
 import styles from './PlayerPage.module.css';
 
 /**
@@ -26,6 +27,22 @@ export default function PlayerPage() {
   // Refs for logic
   const repositoryRef = useRef<JellyfinMediaRepository | null>(null);
   const autoPlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Lock orientation to landscape while playing
+  useEffect(() => {
+    const lockOrientation = async () => {
+      try {
+        await ScreenOrientation.lock({ orientation: 'landscape' });
+      } catch (err) {
+        console.warn('ScreenOrientation lock failed:', err);
+      }
+    };
+    lockOrientation();
+
+    return () => {
+      ScreenOrientation.unlock().catch(() => {});
+    };
+  }, []);
 
   const handleClose = useCallback(() => {
     if (autoPlayTimerRef.current) clearTimeout(autoPlayTimerRef.current);
@@ -161,6 +178,8 @@ export default function PlayerPage() {
         key={playableMedia.id} // Re-mount player for new stream
         title={playableMedia.title}
         streamUrl={streamUrl}
+        startPosition={playableMedia.playbackPositionTicks ? playableMedia.playbackPositionTicks / 10000000 : 0}
+        media={playableMedia}
         onClose={handleClose}
         onEnded={handleEnded}
       />

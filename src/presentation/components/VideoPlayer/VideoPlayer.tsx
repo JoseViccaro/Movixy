@@ -18,6 +18,7 @@ import {
   ChevronDown,
   Settings,
   Languages,
+  PictureInPicture,
 } from 'lucide-react';
 import Hls from 'hls.js';
 import { useToast } from '@/presentation/components/Toast/ToastContext';
@@ -85,6 +86,8 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     direction: 'forward',
     visible: false,
   });
+  const [isPiP, setIsPiP] = useState(false);
+  const canPiP = 'pictureInPictureEnabled' in document && document.pictureInPictureEnabled;
 
   // Track & Settings States (Windows additions)
   const [subtitleTracks, setSubtitleTracks] = useState<SubtitleTrack[]>(() => {
@@ -207,6 +210,22 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     toggleFullscreen(containerRef.current || undefined);
     resetHideTimer();
   }, [toggleFullscreen, resetHideTimer]);
+
+  const togglePiP = useCallback(async () => {
+    const v = videoRef.current;
+    if (!v || !canPiP) return;
+    
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else {
+        await v.requestPictureInPicture();
+      }
+    } catch (err) {
+      console.error('PiP error:', err);
+    }
+    resetHideTimer();
+  }, [canPiP, resetHideTimer]);
 
   const handleSpeedChange = (speed: number) => {
     const v = videoRef.current;
@@ -441,14 +460,20 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     const onPause = () => { setIsPlaying(false); setShowControls(true); };
     const onWaiting = () => setIsBuffering(true);
     const onCanPlay = () => setIsBuffering(false);
+    const onDurationChange = () => setDuration(video.duration);
     const handleEnded = () => { if (onEnded) onEnded(); };
+    const onEnterPiP = () => setIsPiP(true);
+    const onLeavePiP = () => setIsPiP(false);
 
     video.addEventListener('timeupdate', onTimeUpdate);
     video.addEventListener('play', onPlay);
     video.addEventListener('pause', onPause);
     video.addEventListener('waiting', onWaiting);
     video.addEventListener('canplay', onCanPlay);
+    video.addEventListener('durationchange', onDurationChange);
     video.addEventListener('ended', handleEnded);
+    video.addEventListener('enterpictureinpicture', onEnterPiP);
+    video.addEventListener('leavepictureinpicture', onLeavePiP);
 
     if (Hls.isSupported()) {
       const hls = new Hls({
@@ -528,7 +553,10 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
       video.removeEventListener('pause', onPause);
       video.removeEventListener('waiting', onWaiting);
       video.removeEventListener('canplay', onCanPlay);
+      video.removeEventListener('durationchange', onDurationChange);
       video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('enterpictureinpicture', onEnterPiP);
+      video.removeEventListener('leavepictureinpicture', onLeavePiP);
       video.removeEventListener('loadedmetadata', onLoaded);
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -865,6 +893,12 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
                 )}
               </div>
 
+              {/* Picture in Picture */}
+              {canPiP && (
+                <button className={styles.iconBtn} onClick={togglePiP} aria-label={isPiP ? 'Salir de PiP' : 'Modo PiP'} data-focusable="true">
+                  <PictureInPicture size={22} color={isPiP ? '#007AFF' : 'white'} />
+                </button>
+              )}
               {/* Fullscreen */}
               <button className={styles.iconBtn} onClick={handleToggleFullscreen} aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'} data-focusable="true">
                 {isFullscreen ? <Minimize2 size={24} /> : <Maximize2 size={24} />}

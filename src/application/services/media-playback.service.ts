@@ -18,6 +18,11 @@ export class MediaPlaybackService {
   private readonly repository: JellyfinMediaRepository;
   private static playbackCache = new Map<string, string>();
 
+  /** Cache key scoped by user to prevent cross-user token leakage. */
+  private static cacheKey(userId: string, mediaId: string): string {
+    return `${userId}:${mediaId}`;
+  }
+
   constructor(
     client: JellyfinApiClient,
     repository: JellyfinMediaRepository,
@@ -103,14 +108,15 @@ export class MediaPlaybackService {
    * Uses cache if available for instant startup.
    */
   static async resolvePlaybackUrl(media: Media, userId: string): Promise<string> {
-    const cached = this.playbackCache.get(media.id);
+    const key = this.cacheKey(userId, media.id);
+    const cached = this.playbackCache.get(key);
     if (cached) return cached;
 
     const service = await MediaPlaybackService.create(userId);
     const content = await service.getPlayableContent(media);
     
     // Save to cache for future use
-    this.playbackCache.set(media.id, content.url);
+    this.playbackCache.set(key, content.url);
     
     return content.url;
   }
@@ -120,11 +126,12 @@ export class MediaPlaybackService {
    * Call this when a media item is focused or hovered.
    */
   static async preResolve(media: Media, userId: string): Promise<void> {
-    if (this.playbackCache.has(media.id)) return;
+    const key = this.cacheKey(userId, media.id);
+    if (this.playbackCache.has(key)) return;
     
     try {
       const url = await this.resolvePlaybackUrl(media, userId);
-      this.playbackCache.set(media.id, url);
+      this.playbackCache.set(key, url);
     } catch {
       // Silently fail pre-resolution
     }

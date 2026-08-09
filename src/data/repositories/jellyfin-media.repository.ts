@@ -115,7 +115,7 @@ export class JellyfinMediaRepository implements IMediaRepository {
   async getFirstEpisodeId(seriesId: string): Promise<string | null> {
     const response = await this.client.getItems(this.userId, {
       parentId: seriesId,
-      includeItemTypes: ['Episode'],
+      includeItemTypes: ['Episode', 'Video'],
       limit: 1,
       sortBy: 'SortName',
       sortOrder: 'Ascending',

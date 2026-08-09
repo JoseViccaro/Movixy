@@ -10,7 +10,11 @@ export function useFullscreen() {
   const elementRef = useRef<HTMLElement | null>(null);
 
   const updateState = useCallback(() => {
-    setIsFullscreen(!!document.fullscreenElement);
+    const isFs = !!(
+      document.fullscreenElement ||
+      (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement
+    );
+    setIsFullscreen(isFs);
   }, []);
 
   useEffect(() => {
@@ -39,10 +43,12 @@ export function useFullscreen() {
 
   const exitFullscreen = useCallback(async () => {
     try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      } else if ((document as Document & { webkitExitFullscreen: () => Promise<void> }).webkitExitFullscreen) {
-        await (document as Document & { webkitExitFullscreen: () => Promise<void> }).webkitExitFullscreen();
+      if (document.fullscreenElement || (document as Document & { webkitFullscreenElement?: Element }).webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as Document & { webkitExitFullscreen: () => Promise<void> }).webkitExitFullscreen) {
+          await (document as Document & { webkitExitFullscreen: () => Promise<void> }).webkitExitFullscreen();
+        }
       }
     } catch (err) {
       console.warn('Exit fullscreen failed:', err);
