@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, ChevronDown, LogOut, RefreshCw, Settings, Users } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { useToast } from '@/presentation/components/Toast/ToastContext';
 import styles from './UserProfile.module.css';
@@ -55,12 +56,22 @@ export const UserProfile = ({ userId, username, avatarUrl, onLogout }: UserProfi
     window.location.reload();
   };
 
+  const queryClient = useQueryClient();
+
   const handleRefresh = async () => {
     if (!client) return;
     setIsOpen(false);
     try {
       await client.refreshLibrary();
-      addToast('success', 'Escaneo de biblioteca iniciado. Los nuevos archivos aparecerán pronto.');
+      addToast('info', 'Escaneo de biblioteca iniciado en el servidor...');
+      
+      // Invalidate frontend cache immediately and then 5 seconds later
+      await queryClient.invalidateQueries();
+      
+      setTimeout(async () => {
+        await queryClient.invalidateQueries();
+        addToast('success', 'Catálogo actualizado.');
+      }, 5000);
     } catch {
       addToast('error', 'Error al escanear la biblioteca.');
     }
