@@ -15,11 +15,37 @@ import { secureStorage } from '@/core/utils/secure-storage';
 import { BackdropProvider } from '@/presentation/components/ImmersiveBackdrop/BackdropProvider';
 import { ImmersiveBackdrop } from '@/presentation/components/ImmersiveBackdrop/ImmersiveBackdrop';
 import { Navbar } from '@/presentation/components/Navbar/Navbar';
+import { useAppUpdate } from '@/application/hooks/useAppUpdate';
+import { UpdateAvailableModal } from '@/presentation/components/UpdateAvailableModal/UpdateAvailableModal';
 
 export const AppLayout = () => {
   const [authState, setAuthState] = useState<'pending' | 'ok' | 'denied'>(
     'pending',
   );
+
+  const {
+    status: updateStatus,
+    isModalOpen: isUpdateModalOpen,
+    currentVersion,
+    latestRelease,
+    progress: updateProgress,
+    error: updateError,
+    startUpdate,
+    dismissModal: dismissUpdateModal,
+  } = useAppUpdate({
+    autoCheck: true,
+    checkDelayMs: 3000,
+    owner:
+      (typeof import.meta !== 'undefined' &&
+        import.meta.env &&
+        import.meta.env.VITE_GITHUB_REPO_OWNER) ||
+      'JoseViccaro',
+    repo:
+      (typeof import.meta !== 'undefined' &&
+        import.meta.env &&
+        import.meta.env.VITE_GITHUB_REPO_NAME) ||
+      'Movixy',
+  });
 
   useEffect(() => {
     secureStorage.isAuthenticated().then((authenticated) => {
@@ -43,8 +69,19 @@ export const AppLayout = () => {
             </Suspense>
           </main>
           <OfflineIndicator />
+          <UpdateAvailableModal
+            isOpen={isUpdateModalOpen}
+            status={updateStatus}
+            currentVersion={currentVersion}
+            release={latestRelease}
+            progress={updateProgress}
+            error={updateError}
+            onUpdate={startUpdate}
+            onDismiss={dismissUpdateModal}
+          />
         </div>
       </BackdropProvider>
     </ErrorBoundary>
   );
 };
+

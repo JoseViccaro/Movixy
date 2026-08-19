@@ -281,8 +281,18 @@ export class JellyfinApiClient {
     });
   }
 
-  async getPlaybackInfo(userId: string, itemId: string, options?: { MaxStaticBitrate?: number; MaxStreamingBitrate?: number; MusicStreamingTranscodingBitrate?: number }) {
-    const deviceProfile = {
+  async getPlaybackInfo(
+    userId: string,
+    itemId: string,
+    options?: {
+      DeviceProfile?: any;
+      MaxStaticBitrate?: number;
+      MaxStreamingBitrate?: number;
+      MusicStreamingTranscodingBitrate?: number;
+      StartTimeTicks?: number;
+    }
+  ) {
+    const deviceProfile = options?.DeviceProfile || {
       MaxStaticBitrate: options?.MaxStaticBitrate || 20000000,
       MaxStreamingBitrate: options?.MaxStreamingBitrate || 20000000,
       MusicStreamingTranscodingBitrate: 192000,

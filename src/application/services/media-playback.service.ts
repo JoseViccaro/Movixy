@@ -1,21 +1,25 @@
-import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
-import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
-import type { Media } from '@/domain/models/media.model';
+import { JellyfinApiClient } from "@/data/sources/jellyfin-api.client";
+import { JellyfinMediaRepository } from "@/data/repositories/jellyfin-media.repository";
+import type { Media } from "@/domain/models/media.model";
+import { PlaybackEngineService } from "./playback-engine.service";
+import type { PlaybackStreamPlan } from "@/domain/models/media-profile.model";
 
 export interface PlayableContent {
   url: string;
   startPosition?: number;
+  streamPlan?: PlaybackStreamPlan;
 }
 
 /**
  * MediaPlaybackService — Application layer service to resolve playable content.
- * Centralizes the logic for movies and TV series (episode resolution).
+ * Integrates dynamic DeviceProfile and direct play stream plans via PlaybackEngineService.
  */
 export class MediaPlaybackService {
   private static instance: MediaPlaybackService | null = null;
 
   private readonly client: JellyfinApiClient;
   private readonly repository: JellyfinMediaRepository;
+  private readonly playbackEngine: PlaybackEngineService;
   private static playbackCache = new Map<string, string>();
 
   /** Cache key scoped by user to prevent cross-user token leakage. */
@@ -26,9 +30,11 @@ export class MediaPlaybackService {
   constructor(
     client: JellyfinApiClient,
     repository: JellyfinMediaRepository,
+    playbackEngine?: PlaybackEngineService
   ) {
     this.client = client;
     this.repository = repository;
+    this.playbackEngine = playbackEngine ?? new PlaybackEngineService(undefined, undefined, client);
   }
 
   /**
@@ -39,51 +45,35 @@ export class MediaPlaybackService {
     let playableId = media.id;
 
     // Resolve episode if needed
-    if (media.mediaType === 'tv') {
+    if (media.mediaType === "tv") {
       const episodeId = await this.repository.getFirstEpisodeId(media.id);
-      if (!episodeId) throw new Error('No se encontraron episodios.');
+      if (!episodeId) throw new Error("No se encontraron episodios.");
       playableId = episodeId;
     }
 
-    // Professional Playback Negotiation
     const userId = this.repository.getUserId();
-    const cleanPlayableId = playableId.replace(/-/g, '');
-    const playbackInfo = await this.client.getPlaybackInfo(userId, cleanPlayableId, {
-      MaxStaticBitrate: 20000000,
-      MaxStreamingBitrate: 20000000,
-      MusicStreamingTranscodingBitrate: 192000,
-    });
-    const source = playbackInfo.MediaSources[0];
-
-    if (!source) throw new Error('No se encontraron fuentes de medios.');
-
-    // Convert ticks to seconds
     const startPosition = media.playbackPositionTicks
       ? media.playbackPositionTicks / 10_000_000
       : undefined;
 
-    // If Jellyfin suggests a TranscodingUrl, use it (relative to base)
-    if (source.TranscodingUrl) {
-      const base = this.client.baseUrl.replace(/\/$/, '');
-      const transcodingPath = source.TranscodingUrl.startsWith('/') 
-        ? source.TranscodingUrl 
-        : `/${source.TranscodingUrl}`;
-      const url = source.TranscodingUrl.startsWith('http') 
-        ? source.TranscodingUrl 
-        : `${base}${transcodingPath}`;
-      
-      // Transcoding URLs already have tags and complex params
-      // We fix potential malformations (lowercase 'videos' and '?&' issue)
+    try {
+      const streamPlan = await this.playbackEngine.resolveStreamPlan(
+        playableId,
+        userId,
+        undefined,
+        startPosition
+      );
+
       return {
-        url: url.replace(/\/videos\//, '/Videos/').replace('?&', '?'),
+        url: streamPlan.streamUrl,
         startPosition,
+        streamPlan,
       };
-    } else {
-      // Fallback to our builder which is already tuned for 8Mbps/H264
+    } catch {
+      // Direct stream fallback
+      const cleanPlayableId = playableId.replace(/-/g, "");
       const url = this.client.getStreamUrl(cleanPlayableId);
-      
-      // Append cache buster only to our custom stream URLs
-      const separator = url.includes('?') ? '&' : '?';
+      const separator = url.includes("?") ? "&" : "?";
       return {
         url: `${url}${separator}_t=${Date.now()}`,
         startPosition,
@@ -114,10 +104,10 @@ export class MediaPlaybackService {
 
     const service = await MediaPlaybackService.create(userId);
     const content = await service.getPlayableContent(media);
-    
+
     // Save to cache for future use
     this.playbackCache.set(key, content.url);
-    
+
     return content.url;
   }
 
@@ -128,7 +118,7 @@ export class MediaPlaybackService {
   static async preResolve(media: Media, userId: string): Promise<void> {
     const key = this.cacheKey(userId, media.id);
     if (this.playbackCache.has(key)) return;
-    
+
     try {
       const url = await this.resolvePlaybackUrl(media, userId);
       this.playbackCache.set(key, url);

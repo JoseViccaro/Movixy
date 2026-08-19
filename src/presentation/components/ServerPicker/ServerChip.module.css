@@ -1,0 +1,44 @@
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  padding: 6px 14px;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: #e50914;
+  transform: translateY(-1px);
+}
+
+.chipActive {
+  background: rgba(229, 9, 20, 0.2);
+  border-color: #e50914;
+  color: #fff;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+.dotOffline {
+  background: #ef4444;
+}
+
+.latency {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.6);
+}

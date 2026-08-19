@@ -23,9 +23,20 @@ import {
 import Hls from 'hls.js';
 import { useToast } from '@/presentation/components/Toast/ToastContext';
 import { useFullscreen } from '@/presentation/hooks/useFullscreen';
+import { usePlayerGestures } from '@/presentation/hooks/usePlayerGestures';
+import { GestureHUD } from '@/presentation/components/VideoPlayer/GestureHUD';
 import type { Media } from '@/domain/models/media.model';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
+import { JellyfinTrickplayRepositoryImpl } from '@/data/repositories/jellyfin-trickplay.repository';
+import { JellyfinChapterRepositoryImpl } from '@/data/repositories/jellyfin-chapter.repository';
+import { CanvasThumbnailFallback } from '@/data/sources/CanvasThumbnailFallback';
+import { useThumbnailScrub } from '@/application/hooks/useThumbnailScrub';
+import { useChapterMarkers } from '@/application/hooks/useChapterMarkers';
+import type { TrickplayManifest } from '@/domain/models/trickplay.model';
+import type { ChapterMarker } from '@/domain/models/chapter-marker.model';
+import { ThumbnailPreviewTooltip } from '@/presentation/components/VideoPlayer/ThumbnailPreviewTooltip';
+import { SkipMarkerButton } from '@/presentation/components/VideoPlayer/SkipMarkerButton';
 import styles from './VideoPlayer.module.css';
 
 interface VideoPlayerProps {
@@ -123,11 +134,89 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
   });
 
   const [error, setError] = useState<string | null>(null);
+  const [trickplayManifest, setTrickplayManifest] = useState<TrickplayManifest | null>(null);
+  const [chapterMarkers, setChapterMarkers] = useState<ChapterMarker[]>([]);
+  const [fallbackSnapshotUrl, setFallbackSnapshotUrl] = useState<string | null>(null);
+
+  const trickplayRepoRef = useRef<JellyfinTrickplayRepositoryImpl | null>(null);
+  const fallbackRef = useRef<CanvasThumbnailFallback | null>(null);
+
+  // Initialize repositories and fetch trickplay & chapters
+  useEffect(() => {
+    let isMounted = true;
+    fallbackRef.current = new CanvasThumbnailFallback();
+
+    const loadTrickplayAndChapters = async () => {
+      if (!media?.id) return;
+      try {
+        const client = await JellyfinApiClient.create();
+        const userId = localStorage.getItem('movixy_user_id') || '';
+        
+        const trickplayRepo = new JellyfinTrickplayRepositoryImpl(client);
+        trickplayRepoRef.current = trickplayRepo;
+        const chapterRepo = new JellyfinChapterRepositoryImpl(client, userId);
+
+        const [manifest, markers] = await Promise.all([
+          trickplayRepo.getTrickplayManifest(media.id),
+          chapterRepo.getChapterMarkers(media.id),
+        ]);
+
+        if (isMounted) {
+          setTrickplayManifest(manifest);
+          setChapterMarkers(markers);
+        }
+      } catch (e) {
+        console.error('Failed to load trickplay or chapters:', e);
+      }
+    };
+
+    loadTrickplayAndChapters();
+
+    return () => {
+      isMounted = false;
+      if (fallbackRef.current) {
+        fallbackRef.current.dispose();
+      }
+    };
+  }, [media?.id]);
+
+  // Scrub hook
+  const { previewState, handleHover, handleLeave } = useThumbnailScrub({
+    manifest: trickplayManifest,
+    duration,
+    trickplayRepo: trickplayRepoRef.current || undefined,
+  });
+
+  // Chapter skip hook
+  const { activeSkipState } = useChapterMarkers({
+    markers: chapterMarkers,
+    currentTime,
+  });
 
   const { addToast } = useToast();
   const { isFullscreen, toggleFullscreen } = useFullscreen();
 
   const lastMousePos = useRef({ x: 0, y: 0 });
+
+  const {
+    hudState,
+    brightness,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+  } = usePlayerGestures({
+    onVolumeChange: (newVol) => {
+      handleVolumeChange(newVol);
+    },
+    onBrightnessChange: () => {},
+    onSeek: (delta) => {
+      seek(delta);
+    },
+    initialVolume: volume,
+    currentTime,
+    duration,
+  });
+
 
   // ── Auto-hide controls ────────────────────────────────────────────────────
   const resetHideTimer = useCallback((e?: React.MouseEvent) => {
@@ -271,8 +360,28 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     const v = videoRef.current;
     if (!bar || !v || !isFinite(v.duration)) return;
     const rect = bar.getBoundingClientRect();
-    const ratio = (e.clientX - rect.left) / rect.width;
-    setHoverTime({ time: ratio * v.duration, x: e.clientX - rect.left });
+    const pixelX = e.clientX - rect.left;
+    const ratio = pixelX / rect.width;
+    const time = ratio * v.duration;
+    setHoverTime({ time, x: pixelX });
+
+    handleHover({
+      pixelX,
+      containerWidth: rect.width,
+    });
+
+    if (!trickplayManifest && fallbackRef.current && streamUrl) {
+      fallbackRef.current.getThumbnail(streamUrl, time).then((snapshot) => {
+        if (snapshot) {
+          setFallbackSnapshotUrl(snapshot);
+        }
+      });
+    }
+  };
+
+  const handleProgressLeave = () => {
+    setHoverTime(null);
+    handleLeave();
   };
 
   const saveProgress = useCallback(async () => {
@@ -571,6 +680,10 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
     <div
       ref={containerRef}
       className={styles.playerRoot}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ filter: brightness !== 1 ? `brightness(${brightness})` : undefined }}
       onMouseMove={resetHideTimer}
       onClick={() => {
         setShowSubtitlesMenu(false);
@@ -590,6 +703,7 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
         playsInline
       />
 
+      <GestureHUD state={hudState} />
       {/* ── Seek Flash Indicators ────────────────────────────────────────── */}
       {seekIndicator.visible && (
         <div className={`${styles.seekIndicator} ${seekIndicator.direction === 'forward' ? styles.seekRight : styles.seekLeft}`}>
@@ -644,6 +758,17 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
         )}
         <div className={styles.centerArea} onClick={(e) => { e.stopPropagation(); togglePlayPause(); }} />
 
+        {/* ─ Skip Marker Overlay ────────────────────────────────────────── */}
+        <SkipMarkerButton
+          state={activeSkipState}
+          onSkip={(targetTime) => {
+            const v = videoRef.current;
+            if (!v) return;
+            v.currentTime = targetTime;
+            resetHideTimer();
+          }}
+        />
+
         {/* ─ Bottom Controls ────────────────────────────────────────────── */}
         <div className={styles.bottomBar} onClick={(e) => e.stopPropagation()}>
 
@@ -653,14 +778,20 @@ export const VideoPlayer = ({ streamUrl, onClose, onEnded, title, startPosition,
             className={styles.progressContainer}
             onClick={handleProgressClick}
             onMouseMove={handleProgressHover}
-            onMouseLeave={() => setHoverTime(null)}
+            onMouseLeave={handleProgressLeave}
             aria-label="Barra de progreso"
           >
+            {previewState.visible && (
+              <ThumbnailPreviewTooltip
+                state={previewState}
+                fallbackSnapshotUrl={fallbackSnapshotUrl}
+              />
+            )}
             <div className={styles.progressTrack}>
               <div className={styles.progressFill} style={{ width: `${progress}%` }} />
               <div className={styles.progressThumb} style={{ left: `${progress}%` }} />
             </div>
-            {hoverTime && (
+            {hoverTime && !previewState.visible && (
               <div className={styles.hoverTime} style={{ left: hoverTime.x }}>
                 {formatTime(hoverTime.time)}
               </div>

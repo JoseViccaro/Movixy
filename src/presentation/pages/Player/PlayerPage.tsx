@@ -1,20 +1,25 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { VideoPlayer } from '@/presentation/components/VideoPlayer/VideoPlayer';
 import { JellyfinApiClient } from '@/data/sources/jellyfin-api.client';
 import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repository';
 import type { Media } from '@/domain/models/media.model';
+import { PlaybackResumeService } from '@/application/services/playback-resume.service';
+import { ResumeChoiceDialog } from '@/presentation/components/ResumeChoiceDialog/ResumeChoiceDialog';
 import { ScreenOrientation } from '@capacitor/screen-orientation';
 import styles from './PlayerPage.module.css';
 
 /**
  * PlayerPage — Robust dedicated playback page.
- * Handles single movies and series with auto-play functionality.
+ * Handles single movies and series with auto-play functionality and resume prompt.
  */
 export default function PlayerPage() {
   const { mediaId } = useParams<{ mediaId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   
+  const resumeService = useMemo(() => new PlaybackResumeService(), []);
+
   // States
   const [playableMedia, setPlayableMedia] = useState<Media | null>(null);
   const [streamUrl, setStreamUrl] = useState<string | null>(null);
@@ -23,6 +28,11 @@ export default function PlayerPage() {
   const [error, setError] = useState<string | null>(null);
   const [showNextEpisodePrompt, setShowNextEpisodePrompt] = useState(false);
   const [nextEpisode, setNextEpisode] = useState<Media | null>(null);
+
+  // Resume prompt state
+  const [isResumePromptOpen, setIsResumePromptOpen] = useState(false);
+  const [resumeEligibility, setResumeEligibility] = useState<ReturnType<PlaybackResumeService['evaluateEligibility']> | null>(null);
+  const [startPosition, setStartPosition] = useState<number | null>(null);
 
   // Refs for logic
   const repositoryRef = useRef<JellyfinMediaRepository | null>(null);
@@ -53,11 +63,13 @@ export default function PlayerPage() {
     setIsLoading(true);
     setShowNextEpisodePrompt(false);
     setNextEpisode(null);
+    setIsResumePromptOpen(false);
     
     try {
       const client = await JellyfinApiClient.create();
       setPlayableMedia(episode);
       setStreamUrl(client.getStreamUrl(episode.id));
+      setStartPosition(0);
     } catch (err) {
       console.error('Error switching to next episode:', err);
       setError('No se pudo cargar el siguiente episodio.');
@@ -110,19 +122,22 @@ export default function PlayerPage() {
         repositoryRef.current = repository;
 
         const mediaData = await repository.getById(mediaId);
+        let targetMedia: Media;
 
         if (mediaData.mediaType === 'tv') {
           const episodesList = await repository.getEpisodes(mediaId);
           setEpisodes(episodesList);
 
           if (episodesList.length > 0) {
-            setPlayableMedia(episodesList[0]);
-            setStreamUrl(client.getStreamUrl(episodesList[0].id));
+            targetMedia = episodesList[0];
+            setPlayableMedia(targetMedia);
+            setStreamUrl(client.getStreamUrl(targetMedia.id));
           } else {
             throw new Error('Esta serie no tiene episodios disponibles.');
           }
         } else if (mediaData.mediaType === 'episode') {
-          setPlayableMedia(mediaData);
+          targetMedia = mediaData;
+          setPlayableMedia(targetMedia);
           setStreamUrl(client.getStreamUrl(mediaId));
           if (mediaData.seriesId) {
             try {
@@ -133,8 +148,32 @@ export default function PlayerPage() {
             }
           }
         } else {
-          setPlayableMedia(mediaData);
+          targetMedia = mediaData;
+          setPlayableMedia(targetMedia);
           setStreamUrl(client.getStreamUrl(mediaId));
+        }
+
+        // Check if startPosition param is present in URL
+        const explicitStartParam = searchParams.get('startPosition');
+        if (explicitStartParam !== null) {
+          const parsed = Number(explicitStartParam);
+          setStartPosition(Number.isFinite(parsed) ? parsed : 0);
+          setIsResumePromptOpen(false);
+        } else {
+          // Direct navigation: evaluate resume eligibility
+          const eligibility = resumeService.evaluateEligibility({
+            playbackPositionTicks: targetMedia.playbackPositionTicks,
+            runtimeTicks: targetMedia.runtimeTicks,
+          });
+
+          if (eligibility.isResumable) {
+            setResumeEligibility(eligibility);
+            setIsResumePromptOpen(true);
+            setStartPosition(null); // Wait for user decision
+          } else {
+            setStartPosition(0);
+            setIsResumePromptOpen(false);
+          }
         }
       } catch (err) {
         console.error('Error loading media:', err);
@@ -149,7 +188,26 @@ export default function PlayerPage() {
     return () => {
       if (autoPlayTimerRef.current) clearTimeout(autoPlayTimerRef.current);
     };
-  }, [mediaId, navigate]);
+  }, [mediaId, searchParams, navigate, resumeService]);
+
+  const handleResume = useCallback(() => {
+    if (resumeEligibility) {
+      setStartPosition(resumeEligibility.savedPositionSeconds);
+    } else {
+      setStartPosition(0);
+    }
+    setIsResumePromptOpen(false);
+  }, [resumeEligibility]);
+
+  const handleRestart = useCallback(() => {
+    setStartPosition(0);
+    setIsResumePromptOpen(false);
+  }, []);
+
+  const handleResumeCancel = useCallback(() => {
+    setIsResumePromptOpen(false);
+    handleClose();
+  }, [handleClose]);
 
   if (isLoading) {
     return (
@@ -174,14 +232,25 @@ export default function PlayerPage() {
 
   return (
     <div className={styles.playerWrapper}>
-      <VideoPlayer
-        key={playableMedia.id} // Re-mount player for new stream
+      {startPosition !== null && (
+        <VideoPlayer
+          key={`${playableMedia.id}-${startPosition}`} // Re-mount player for new stream / position
+          title={playableMedia.title}
+          streamUrl={streamUrl}
+          startPosition={startPosition}
+          media={playableMedia}
+          onClose={handleClose}
+          onEnded={handleEnded}
+        />
+      )}
+
+      <ResumeChoiceDialog
+        isOpen={isResumePromptOpen}
         title={playableMedia.title}
-        streamUrl={streamUrl}
-        startPosition={playableMedia.playbackPositionTicks ? playableMedia.playbackPositionTicks / 10000000 : 0}
-        media={playableMedia}
-        onClose={handleClose}
-        onEnded={handleEnded}
+        eligibility={resumeEligibility}
+        onResume={handleResume}
+        onRestart={handleRestart}
+        onClose={handleResumeCancel}
       />
 
       {showNextEpisodePrompt && nextEpisode && (
@@ -211,4 +280,3 @@ export default function PlayerPage() {
     </div>
   );
 }
-

@@ -20,8 +20,12 @@ export const SeriesPage: React.FC = () => {
   const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
   const { mutate: toggleFavorite } = useFavoriteToggle(userId);
 
-  const handlePlay = (media: Media) => {
-    navigate(`/play/${media.id}`);
+  const handlePlay = (media: Media, startPositionSeconds?: number) => {
+    if (typeof startPositionSeconds === 'number') {
+      navigate(`/play/${media.id}?startPosition=${startPositionSeconds}`);
+    } else {
+      navigate(`/play/${media.id}`);
+    }
   };
 
   const hoverTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);

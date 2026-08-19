@@ -46,12 +46,15 @@ export function HomePage() {
   }, [userId]);
 
   // ── Handlers ──
-  const handlePlay = (media: Media) => {
-    navigate(`/play/${media.id}`);
+  const handlePlay = (media: Media, startPositionSeconds?: number) => {
+    if (typeof startPositionSeconds === 'number') {
+      navigate(`/play/${media.id}?startPosition=${startPositionSeconds}`);
+    } else {
+      navigate(`/play/${media.id}`);
+    }
   };
 
   const handleSelect = (media: Media) => setSelectedMedia(media);
-  const handleSearch = (query: string) => setSearchQuery(query);
   const handleFilterChange = (newFilters: FilterState) => setFilters(newFilters);
   const handleToggleFavorite = (media: Media) => toggleFavorite({ mediaId: media.id, isFavorite: !media.isFavorite });
 
@@ -64,93 +67,85 @@ export function HomePage() {
     }, 300);
   }, [userId]);
 
-  // ── D-pad Navigation ──
+  // D-pad navigation for home page
   useDpadNavigation({
     enabled: !selectedMedia,
-    onBack: () => {
-      if (searchQuery) setSearchQuery('');
-      else if (filters) setFilters(null);
-    }
   });
 
-  if (isLoadingPopular && popular.length === 0) {
-    return (
-      <div className={styles.loadingContainer}>
-        <Navbar onSearch={handleSearch} onSelectMedia={handleSelect} />
-        <Skeleton type="hero" />
-        <div className={styles.skeletonRow}>
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Skeleton key={i} type="card" />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className={styles.home}>
+    <div className={styles.homeContainer}>
+      <Navbar onSearch={setSearchQuery} onSelectMedia={handleSelect} />
+
       {fetchError && (
-        <div style={{ padding: '20px', margin: '20px', backgroundColor: 'rgba(255, 77, 77, 0.15)', border: '1px solid #ff4d4d', borderRadius: '8px', color: '#ff8080', fontSize: '14px', zIndex: 1000, position: 'relative' }}>
-          <strong style={{ display: 'block', marginBottom: '5px', fontSize: '16px' }}>Error de conexión / carga:</strong>
-          <div>{fetchError.message}</div>
-          <div style={{ marginTop: '5px', opacity: 0.8 }}>Intentando conectar a: {localStorage.getItem('movixy_server_url')}</div>
+        <div className={styles.errorBanner}>
+          <p>Error al cargar el contenido: {fetchError.message}</p>
+          <button onClick={() => window.location.reload()}>Reintentar</button>
         </div>
       )}
-      {!searchQuery && !filters ? (
+
+      {/* Hero Section */}
+      <Hero
+        movie={heroMovie}
+        userId={userId}
+        onMoreInfo={() => heroMovie && handleSelect(heroMovie)}
+        onPlay={() => heroMovie && handlePlay(heroMovie)}
+      />
+
+      {/* Main Content Rows */}
+      {!filters && !searchQuery ? (
         <>
-          <Hero 
-            movie={heroMovie} 
-            userId={userId}
-            onPlay={() => handlePlay(heroMovie!)} 
-            onMoreInfo={() => handleSelect(heroMovie!)} 
-          />
-          
-          <div className={styles.rows}>
-            {continueWatching.length > 0 && (
-              <div data-section="continue-watching">
-                <MovieRow 
-                  title="Continuar viendo" 
-                  movies={continueWatching} 
-                  onSelect={handleSelect}
-                  onPlay={handlePlay}
-                  onToggleFavorite={handleToggleFavorite}
-                  onHover={handleHover}
-                />
+          {continueWatching.length > 0 && (
+            <div className={styles.rowSection} data-section="continue-watching">
+              <MovieRow
+                title="Continuar viendo"
+                movies={continueWatching}
+                onSelect={handleSelect}
+                onPlay={handlePlay}
+                onToggleFavorite={handleToggleFavorite}
+                onHover={handleHover}
+              />
+            </div>
+          )}
+
+          <div className={styles.rowSection} data-section="popular">
+            {isLoadingPopular ? (
+              <div className={styles.skeletonRow}>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} type="card" />
+                ))}
               </div>
+            ) : (
+              <MovieRow
+                title="Tendencias ahora"
+                movies={popular}
+                onSelect={handleSelect}
+                onPlay={handlePlay}
+                onToggleFavorite={handleToggleFavorite}
+                onHover={handleHover}
+              />
             )}
-            
-            <div data-section="trending">
-              <MovieRow 
-                title="Tendencias ahora" 
-                movies={popular} 
-                onSelect={handleSelect}
-                onPlay={handlePlay}
-                onToggleFavorite={handleToggleFavorite}
-                onHover={handleHover}
-              />
-            </div>
-            
-            <div data-section="movies">
-              <MovieRow 
-                title="Películas para ti" 
-                movies={movies} 
-                onSelect={handleSelect}
-                onPlay={handlePlay}
-                onToggleFavorite={handleToggleFavorite}
-                onHover={handleHover}
-              />
-            </div>
-            
-            <div data-section="series">
-              <MovieRow 
-                title="Series populares" 
-                movies={series} 
-                onSelect={handleSelect}
-                onPlay={handlePlay}
-                onToggleFavorite={handleToggleFavorite}
-                onHover={handleHover}
-              />
-            </div>
+          </div>
+
+          <div className={styles.rowSection} data-section="movies">
+            <MovieRow
+              title="Películas aclamadas"
+              movies={movies}
+              onSelect={handleSelect}
+              onPlay={handlePlay}
+              onToggleFavorite={handleToggleFavorite}
+              onHover={handleHover}
+            />
+          </div>
+
+          <div className={styles.rowSection} data-section="series">
+            <MovieRow
+              title="Series de televisión"
+              movies={series}
+              onSelect={handleSelect}
+              onPlay={handlePlay}
+              onToggleFavorite={handleToggleFavorite}
+              onHover={handleHover}
+            />
           </div>
         </>
       ) : (
