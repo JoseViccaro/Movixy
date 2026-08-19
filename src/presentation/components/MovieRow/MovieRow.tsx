@@ -51,7 +51,7 @@ export const MovieRow = ({ title, movies, onSelect, onPlay, onToggleFavorite, on
   const handleKeyDown = (e: React.KeyboardEvent, movie: Media) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onPlay?.(movie);
+      onSelect(movie);
     }
   };
 

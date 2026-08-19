@@ -37,7 +37,7 @@ export const MovieCard = ({
       onKeyDown={(e) => handleKeyDown(e, movie)}
       onMouseEnter={handleMouseEnter}
       onFocus={handleMouseEnter}
-      onClick={() => onPlay?.(movie)}
+      onClick={() => onSelect(movie)}
       role="listitem"
       tabIndex={0}
       data-focusable="true"
