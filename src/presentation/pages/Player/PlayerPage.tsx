@@ -6,7 +6,7 @@ import { JellyfinMediaRepository } from '@/data/repositories/jellyfin-media.repo
 import type { Media } from '@/domain/models/media.model';
 import { PlaybackResumeService } from '@/application/services/playback-resume.service';
 import { ResumeChoiceDialog } from '@/presentation/components/ResumeChoiceDialog/ResumeChoiceDialog';
-import { ScreenOrientation } from '@capacitor/screen-orientation';
+import { useImmersivePlayer } from '@/application/hooks/useImmersivePlayer';
 import styles from './PlayerPage.module.css';
 
 /**
@@ -19,6 +19,11 @@ export default function PlayerPage() {
   const navigate = useNavigate();
   
   const resumeService = useMemo(() => new PlaybackResumeService(), []);
+
+  // Sticky immersive mode (hides status bar, navigation bar, locks landscape)
+  useImmersivePlayer({
+    autoEnterOnMount: true,
+  });
 
   // States
   const [playableMedia, setPlayableMedia] = useState<Media | null>(null);
@@ -37,22 +42,6 @@ export default function PlayerPage() {
   // Refs for logic
   const repositoryRef = useRef<JellyfinMediaRepository | null>(null);
   const autoPlayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Lock orientation to landscape while playing
-  useEffect(() => {
-    const lockOrientation = async () => {
-      try {
-        await ScreenOrientation.lock({ orientation: 'landscape' });
-      } catch (err) {
-        console.warn('ScreenOrientation lock failed:', err);
-      }
-    };
-    lockOrientation();
-
-    return () => {
-      ScreenOrientation.unlock().catch(() => {});
-    };
-  }, []);
 
   const handleClose = useCallback(() => {
     if (autoPlayTimerRef.current) clearTimeout(autoPlayTimerRef.current);
