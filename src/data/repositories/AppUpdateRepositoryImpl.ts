@@ -93,7 +93,11 @@ export class AppUpdateRepositoryImpl implements IAppUpdateRepository {
       });
     }
 
-    // On Web and Capacitor basic fallback, opening the browser downloads the APK or takes to release
-    window.open(assetUrl, '_blank');
+    // Try window.open first (standard browser / external intent)
+    const opened = window.open(assetUrl, '_blank');
+    if (!opened) {
+      // In webview where popup is blocked, redirect window.location
+      window.location.href = assetUrl;
+    }
   }
 }
